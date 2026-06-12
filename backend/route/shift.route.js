@@ -1,35 +1,73 @@
 const express = require("express");
 const router = express.Router();
+const { z } = require("zod");
+const mongoose = require("mongoose");
 const shiftController = require("../controllers/shift.controller");
 const { authMiddleware, allowRoles } = require("../middlewares/auth-middleware");
 const validate = require("../middlewares/validate-middleware");
-const { closeShiftSchema } = require("../validation/shift.validation");
+const { 
+  openShiftSchema, 
+  drawerSessionSchema, 
+  closeDrawerSchema, 
+  closeShiftSchema 
+} = require("../validation/shift.validation");
 
-// সব শিফট রুটে লগইন আবশ্যক
+// জেনেরিক আইডি ভ্যালিডেশন
+const idParamSchema = z.object({
+  id: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid ID format",
+  }),
+});
+
 router.use(authMiddleware);
 
-// শিফট ওপেন করা (Admin এবং Salesman উভয়েই পারবে)
-router.post("/open", allowRoles("ADMIN", "SALESMAN"), shiftController.openShift);
-
-// শিফট ক্লোজ করা (ক্লোজ করার সময় ভ্যালিডেশন চেক হবে)
-router.post(
-  "/close", 
+// ১. কারেন্ট স্ট্যাটাস (এটা কোনো আইডি ছাড়াই কাজ করবে)
+router.get(
+  "/current", 
   allowRoles("ADMIN", "SALESMAN"), 
-  validate(closeShiftSchema), 
+  shiftController.getCurrentStatus
+);
+
+// ২. শিফট ওপেন করা
+router.post(
+  "/open", 
+  allowRoles("ADMIN", "SALESMAN"), 
+  validate(openShiftSchema, "body"), 
+  shiftController.openShift
+);
+
+// ৩. ড্রয়ার সেশন ওপেন করা
+router.post(
+  "/drawer/open", 
+  allowRoles("ADMIN", "SALESMAN"), 
+  validate(drawerSessionSchema, "body"), 
+  shiftController.openDrawerSession
+);
+
+// ৪. ড্রয়ার সেশন ক্লোজ করা
+router.patch(
+  "/drawer/:id/close", 
+  allowRoles("ADMIN", "SALESMAN"), 
+  validate(idParamSchema, "params"), 
+  validate(closeDrawerSchema, "body"), 
+  shiftController.closeDrawerSession
+);
+
+// ৫. শিফট ক্লোজ করা
+router.post(
+  "/:id/close", 
+  allowRoles("ADMIN", "SALESMAN"), 
+  validate(idParamSchema, "params"), 
+  validate(closeShiftSchema, "body"), 
   shiftController.closeShift
 );
 
-// সব শিফটের লিস্ট দেখা (অ্যাডমিন সব দেখবে, সেলসম্যান নিজেরটা)
+// ৬. শিফট অডিট রিপোর্ট
 router.get(
-  "/", 
+  "/:id/audit", 
   allowRoles("ADMIN", "SALESMAN"), 
-  shiftController.getShifts
-);
-
-// বর্তমানে কোনো শিফট ওপেন আছে কি না তা চেক করা
-router.get(
-  "/current", 
-  shiftController.getCurrentShift
+  validate(idParamSchema, "params"), 
+  shiftController.getAuditReport
 );
 
 module.exports = router;

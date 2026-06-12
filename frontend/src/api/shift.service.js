@@ -1,21 +1,24 @@
 import api from "./api";
 
 const shiftApi = {
-  // ১. বর্তমানে কোনো শিফট ওপেন আছে কি না তা চেক করা
-  // Full URL: http://localhost:5000/api/v1/shifts/current
-  getCurrentShift: () => api.get("/v1/shifts/current"),
+  // ১. শিফট ওপেন করা (POST -> /api/v1/shifts/open)
+  openShift: (data) => api.post("/v1/shifts/open", data),
 
-  // ২. শিফট ওপেন করা
-  // Full URL: http://localhost:5000/api/v1/shifts/open
-  openShift: () => api.post("/v1/shifts/open"),
+  // ২. ড্রয়ার সেশন ওপেন করা (POST -> /api/v1/shifts/drawer/open)
+  openDrawer: (data) => api.post("/v1/shifts/drawer/open", data),
 
-  // ৩. শিফট ক্লোজ করা
-  // Full URL: http://localhost:5000/api/v1/shifts/close
-  closeShift: (closingData) => api.post("/v1/shifts/close", closingData),
+  // ৩. ড্রয়ার সেশন ক্লোজ করা (PATCH -> /api/v1/shifts/drawer/:id/close)
+  closeDrawer: (id, data) => api.patch(`/v1/shifts/drawer/${id}/close`, data),
 
-  // ৪. সব শিফটের লিস্ট দেখা (Admin & Salesman)
-  // Full URL: http://localhost:5000/api/v1/shifts
-  getAllShifts: (params) => api.get("/v1/shifts", { params }),
+  // ৪. পুরো শিফটটি ফাইনাল ক্লোজ করা (POST -> /api/v1/shifts/:id/close)
+  // আপনার রাউটারে এটি router.post দেওয়া আছে, তাই এখানেpost ব্যবহার করা হলো
+  closeShift: (id, data) => api.post(`/v1/shifts/${id}/close`, data),
+
+  // ৫. শিফটের অডিট রিপোর্ট দেখা (GET -> /api/v1/shifts/:id/audit)
+  getAuditReport: (id) => api.get(`/v1/shifts/${id}/audit`),
+
+  getCurrentStatus: () => api.get("/v1/shifts/current-status"),
+  getCurrentStatus: () => api.get("/v1/shifts/current"),
 };
 
 export default shiftApi;

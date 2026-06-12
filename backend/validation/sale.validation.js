@@ -1,10 +1,7 @@
 const { z } = require("zod");
 const mongoose = require("mongoose");
 
-const objectId = (msg) =>
-  z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
-    message: msg,
-  });
+const objectId = (msg) => z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), { message: msg });
 
 const saleItemSchema = z.object({
   productId: objectId("Invalid product ID"),
@@ -17,23 +14,8 @@ const createSaleSchema = z.object({
   shiftId: objectId("Invalid shift ID"),
 });
 
-const saleIdParamSchema = z.object({
-  id: objectId("Invalid sale ID"),
-});
+const saleIdParamSchema = z.object({ id: objectId("Invalid sale ID") });
+const voidSaleSchema = z.object({ reason: z.string().min(3, "Reason must be at least 3 characters") });
+const getSalesQuerySchema = z.object({ page: z.string().optional(), limit: z.string().optional(), search: z.string().optional() });
 
-const voidSaleSchema = z.object({
-  reason: z.string().optional(),
-});
-
-const getSalesQuerySchema = z.object({
-  page: z.string().optional(),
-  limit: z.string().optional(),
-  search: z.string().optional(),
-});
-
-module.exports = {
-  createSaleSchema,
-  saleIdParamSchema,
-  voidSaleSchema,
-  getSalesQuerySchema,
-};
+module.exports = { createSaleSchema, saleIdParamSchema, voidSaleSchema, getSalesQuerySchema };

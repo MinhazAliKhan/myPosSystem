@@ -1,246 +1,198 @@
-import React, { useState, useEffect } from "react";
-import saleApi from "../../api/sale.service";
-import api from "../../api/api"; 
-import { toast } from "react-hot-toast";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSearch, FaShoppingCart, FaTrashAlt, FaBoxOpen, FaTimes, FaArrowLeft, FaRegClock, FaMoneyBillWave } from "react-icons/fa";
+import { FaPowerOff, FaCashRegister, FaSearch, FaTrash, FaCog, FaBan, FaUndo, FaUserCircle, FaBackspace, FaCheckCircle } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
+import productApi from "../../api/product.service";
+import shiftApi from "../../api/shift.service";
+import saleApi from "../../api/sale.service";
+import { usePOS } from "./hooks/usePOS";
+import { useAuth } from "../../store/AuthContext";
 
 const CreateOrder = () => {
-  const [activeShift, setActiveShift] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cart, setCart] = useState([]);
-  const [receivedAmount, setReceivedAmount] = useState("");
-  const [loading, setLoading] = useState(true);
-  
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [status, setStatus] = useState({ shift: null, drawer: null });
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [receivedAmount, setReceivedAmount] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const { cart, addToCart, removeFromCart, totalAmount, setCart } = usePOS();
+
+  const changeAmount = Math.max(0, parseFloat(receivedAmount || 0) - totalAmount);
+
+  const handleNumPad = (num) => setReceivedAmount((prev) => prev + num);
+  const handleBackspace = () => setReceivedAmount((prev) => prev.slice(0, -1));
 
   useEffect(() => {
-    const initializePOS = async () => {
+    const fetchData = async () => {
       try {
-        const shiftRes = await saleApi.getCurrentShift();
-        if (!shiftRes.data?.data) {
-          toast.error("Please open a shift first!");
-          return navigate("/salesman/dashboard");
-        }
-        setActiveShift(shiftRes.data.data);
-
-        const [productRes, catRes] = await Promise.all([
-          api.get("/v1/products/getAllProducts"),
-          api.get("/v1/categories/getCategories")
-        ]);
-
-        setProducts(productRes.data.data || []);
-        const categoryData = catRes.data?.data?.data || catRes.data?.data || [];
-        setCategories(categoryData);
-      } catch (err) {
-        toast.error("Failed to load POS data!");
-        navigate("/salesman/dashboard");
-      } finally {
-        setLoading(false);
-      }
+        const res = await shiftApi.getCurrentStatus();
+        const { shift, drawers } = res.data.data;
+        setStatus({ shift, drawer: drawers?.[0] || null });
+        const prodRes = await productApi.getAllProducts({ isActive: true });
+        setProducts(prodRes.data?.data || []);
+      } catch (err) { console.error(err); }
     };
-    initializePOS();
-  }, [navigate]);
+    fetchData();
+  }, []);
 
-  const handleCategoryChange = (catId) => {
-    setSelectedCategory(catId);
-    setSearchTerm(""); 
+  const handlePay = async () => {
+    if (cart.length === 0) return toast.error("Cart is empty!");
+    if (!status.shift) return toast.error("No active shift!");
+    if (parseFloat(receivedAmount) < totalAmount) return toast.error("Insufficient cash!");
+
+    const saleData = {
+      items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
+      receivedAmount: parseFloat(receivedAmount),
+      changeAmount: changeAmount,
+      shiftId: status.shift._id
+    };
+
+    try {
+      const res = await saleApi.createSale(saleData);
+      if (res.data.success) {
+        setShowModal(true);
+        const prodRes = await productApi.getAllProducts({ isActive: true });
+        setProducts(prodRes.data?.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to process sale");
+    }
   };
 
-  const filteredProducts = products.filter((p) => {
+  const closeModal = () => {
+    setShowModal(false);
+    setCart([]);
+    setReceivedAmount("");
+  };
+
+  const categories = ["All", ...new Set(products.map(p => 
+    (p.category && typeof p.category === 'object' && p.category.name) ? p.category.name : "General"
+  ))];
+
+  const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const productCatId = p.categoryId?._id || p.categoryId || p.category?._id || p.category;
-    const matchesCategory = selectedCategory === "All" || String(productCatId) === String(selectedCategory);
+    const productCatName = (p.category && typeof p.category === 'object' && p.category.name) ? p.category.name : "General";
+    const matchesCategory = selectedCategory === "All" || productCatName === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const addToCart = (product) => {
-    if (product.stock <= 0) return toast.error("Out of stock!");
-    const existing = cart.find(item => item.productId === product._id);
-    if (existing) {
-      setCart(cart.map(item => item.productId === product._id ? { ...item, quantity: item.quantity + 1 } : item));
-    } else {
-      setCart([...cart, { productId: product._id, name: product.name, price: product.price, quantity: 1 }]);
-    }
-    setSearchTerm(""); 
-  };
-
-  const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const changeAmount = receivedAmount ? Math.max(0, parseFloat(receivedAmount) - totalAmount) : 0;
-
-  const handleCheckout = async () => {
-    if (cart.length === 0) return toast.error("Cart is empty!");
-    const cash = parseFloat(receivedAmount) || 0;
-    if (cash < totalAmount) return toast.error("Insufficient cash!");
-
-    try {
-      const saleData = {
-        shiftId: activeShift._id,
-        items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
-        receivedAmount: cash
-      };
-      await saleApi.createSale(saleData);
-      toast.success("Transaction Successful!");
-      setCart([]);
-      setReceivedAmount("");
-      setSearchTerm(""); 
-      setSelectedCategory("All"); 
-      const productRes = await api.get("/v1/products/getAllProducts");
-      setProducts(productRes.data.data);
-    } catch (err) {
-      toast.error("Checkout failed");
-    }
-  };
-
-  if (loading) return <div className="h-screen flex items-center justify-center bg-[#0f172a] font-black text-red-500 animate-pulse uppercase tracking-[0.3em]">Initializing POS...</div>;
-
   return (
-    // ফুল স্ক্রিন ডার্ক লেআউট
-    <div className="fixed inset-0 z-[9999] bg-[#0f172a] flex flex-col h-screen overflow-hidden">
-      
-      {/* ১. টপ বার ডিজাইন */}
-      <header className="bg-[#1e293b] border-b border-white/5 px-6 py-3 flex items-center justify-between shrink-0 shadow-xl">
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={() => navigate("/salesman/dashboard")}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white rounded-xl transition-all border border-red-600/20"
-          >
-            <FaArrowLeft size={14} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Exit</span>
-          </button>
-          <div className="h-8 w-[1px] bg-white/10"></div>
-          <div>
-            <h1 className="text-white text-lg font-black tracking-tight leading-none uppercase">POS System</h1>
-            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-1">Status: Active Shift</p>
+    <div className="h-screen w-full flex flex-col bg-slate-100 font-sans overflow-hidden">
+      <Toaster />
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl w-80 text-center">
+            <FaCheckCircle className="text-emerald-500 mx-auto mb-4" size={50} />
+            <h2 className="text-xl font-black text-slate-800 mb-6">Payment Successful</h2>
+            <div className="flex justify-between py-2 border-b">
+              <span className="text-slate-400 font-bold text-xs uppercase">Received:</span>
+              <span className="font-black text-sm">${parseFloat(receivedAmount || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between py-2 mb-8">
+              <span className="text-slate-400 font-bold text-xs uppercase">Change:</span>
+              <span className="font-black text-rose-500 text-lg">${changeAmount.toFixed(2)}</span>
+            </div>
+            <button onClick={closeModal} className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 uppercase text-xs">Done</button>
           </div>
         </div>
-        <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/10">
-          <FaRegClock className="text-gray-400" size={12} />
-          <span className="text-[10px] font-bold text-gray-300 uppercase">{new Date().toLocaleDateString()}</span>
+      )}
+
+      <header className="h-16 bg-white px-8 flex justify-between items-center border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-3 text-indigo-600 font-black tracking-widest uppercase text-xs">
+          <FaCashRegister /> {status.shift ? "SHIFT ACTIVE" : "SHIFT CLOSED"}
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-200">
+            <FaUserCircle className="text-indigo-500" size={20} />
+            <div className="text-right">
+              <p className="text-[10px] font-black uppercase text-slate-800">{user?.userName || "User"}</p>
+              <p className="text-[8px] font-bold uppercase text-indigo-500">{user?.role || "Staff"}</p>
+            </div>
+          </div>
+          <button onClick={() => { logout(); navigate("/login"); }} className="text-rose-500 hover:text-rose-600"><FaPowerOff size={16} /></button>
         </div>
       </header>
 
-      <div className="flex flex-1 gap-4 p-4 overflow-hidden">
-        
-        {/* ২. প্রোডাক্ট এরিয়া */}
-        <section className="flex-1 flex flex-col overflow-hidden">
-          
-          {/* সার্চ ও ক্যাটাগরি প্যানেল */}
-          <div className="bg-[#1e293b] rounded-3xl p-5 mb-4 border border-white/5 shadow-2xl shrink-0">
-            <div className="relative mb-4 group">
-              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-red-500 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                value={searchTerm} 
-                className="w-full pl-12 pr-12 py-3.5 bg-black/20 border border-white/10 rounded-2xl focus:border-red-500 outline-none text-white text-[15px] font-medium transition-all"
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && <button onClick={() => setSearchTerm("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500"><FaTimes /></button>}
-            </div>
+      <div className="flex-1 flex overflow-hidden p-6 gap-6">
+        <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+          <div className="relative shrink-0">
+            <FaSearch className="absolute left-4 top-4 text-slate-400" />
+            <input type="text" placeholder="Search products..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-400 text-sm" onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-              <button 
-                onClick={() => handleCategoryChange("All")}
-                className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategory === "All" ? "bg-red-600 text-white shadow-lg" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}
-              >
-                All Products
+          <div className="grid grid-cols-3 gap-4 shrink-0">
+            <button onClick={() => navigate("/salesman/manage")} className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex flex-col items-center gap-2">
+              <FaCog size={22} /> <span className="font-black uppercase text-[10px]">Manage</span>
+            </button>
+            <button onClick={() => navigate("/salesman/void")} className="bg-gradient-to-r from-rose-500 to-orange-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex flex-col items-center gap-2">
+              <FaBan size={22} /> <span className="font-black uppercase text-[10px]">Void</span>
+            </button>
+            <button onClick={() => navigate("/salesman/refund")} className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex flex-col items-center gap-2">
+              <FaUndo size={22} /> <span className="font-black uppercase text-[10px]">Refund</span>
+            </button>
+          </div>
+          
+          <div className="flex gap-2 overflow-x-auto pb-2 shrink-0">
+            {categories.map((cat, index) => (
+              <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? "bg-indigo-600 text-white shadow-lg" : "bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50"}`}>
+                {cat}
               </button>
-              {categories.map((cat) => (
-                <button 
-                  key={cat._id}
-                  onClick={() => handleCategoryChange(cat._id)}
-                  className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategory === cat._id ? "bg-red-600 text-white shadow-lg" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
-          {/* প্রোডাক্ট গ্রিড */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-              {filteredProducts.map(product => (
-                <div 
-                  key={product._id} onClick={() => addToCart(product)}
-                  className="bg-[#1e293b] p-4 rounded-[2rem] border border-white/5 hover:border-red-500/50 hover:shadow-2xl hover:shadow-black cursor-pointer transition-all duration-300 flex flex-col items-center group"
-                >
-                  <div className="w-20 h-20 bg-black/20 rounded-3xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <FaBoxOpen className="text-gray-600 group-hover:text-red-500 text-4xl" />
-                  </div>
-                  <h4 className="text-[12px] font-bold text-gray-300 line-clamp-1 h-5 px-2 uppercase">{product.name}</h4>
-                  <p className="text-red-500 font-black text-xl mt-1 tracking-tighter">${product.price.toFixed(2)}</p>
-                  <span className="mt-3 text-[9px] font-black text-gray-500 uppercase bg-black/20 px-3 py-1 rounded-full border border-white/5">Stock: {product.stock}</span>
+          <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 content-start">
+            {filteredProducts.map((p) => (
+              <button key={p._id} onClick={() => addToCart(p)} className="bg-white border-b-4 border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50 p-4 rounded-2xl transition-all shadow-sm flex flex-col items-center justify-center gap-2 h-28">
+                <span className="text-[11px] font-bold text-slate-700 text-center uppercase">{p.name}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Stock: {p.stock}</span>
+                <span className="text-[10px] font-black text-white bg-indigo-500 px-3 py-1 rounded-full">${p.price}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <aside className="w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-full shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-slate-100 font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {cart.map((item, i) => (
+              <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <div className="flex flex-col">
+                  <p className="text-[11px] font-bold text-slate-800">{item.name} <span className="text-indigo-500 font-black">x{item.quantity}</span></p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ৩. চিকন কার্ট প্যানেল (w-72) */}
-        <aside className="w-72 bg-[#1e293b] rounded-[2.5rem] shadow-2xl flex flex-col border border-white/5 shrink-0 overflow-hidden">
-          
-          <div className="p-6 pb-4 flex items-center justify-between shrink-0 bg-black/10">
-             <div className="flex items-center gap-2">
-                <FaShoppingCart className="text-red-500" size={14}/>
-                <h2 className="font-black text-white text-[10px] tracking-widest uppercase">Order Items</h2>
-             </div>
-             <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black">{cart.length}</span>
-          </div>
-
-          {/* কার্ট আইটেম লিস্ট */}
-          <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar p-4 pt-4">
-            {cart.map(item => (
-              <div key={item.productId} className="flex flex-col bg-black/20 p-3 rounded-2xl border border-white/5">
-                <div className="flex justify-between items-start">
-                  <p className="text-[11px] font-bold text-gray-300 line-clamp-1 flex-1 uppercase">{item.name}</p>
-                  <button onClick={() => setCart(cart.filter(i => i.productId !== item.productId))} className="text-gray-600 hover:text-red-500 ml-2">
-                    <FaTrashAlt size={10}/>
-                  </button>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-[9px] text-gray-500 font-black uppercase">{item.quantity} x ${item.price}</p>
-                  <span className="text-[12px] font-black text-white">${(item.price * item.quantity).toFixed(2)}</span>
+                <div className="flex items-center gap-3">
+                   <span className="text-[11px] font-black text-slate-700">${(item.price * item.quantity).toFixed(2)}</span>
+                   <button onClick={() => removeFromCart(item.productId)} className="text-rose-400 hover:text-rose-600"><FaTrash size={12} /></button>
                 </div>
               </div>
             ))}
           </div>
-
-          {/* ৪. চেকআউট সেকশন (আপনার অরিজিনাল লজিকসহ) */}
-          <div className="bg-black/20 p-5 space-y-4 shrink-0 border-t border-white/5">
-            <div className="flex justify-between items-end mb-1">
-              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Total Amount</span>
-              <span className="text-3xl font-black text-white tracking-tighter">${totalAmount.toFixed(2)}</span>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 mb-1">
-                <FaMoneyBillWave className="text-green-500" size={10} />
-                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Cash Received</span>
+          
+          <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0">
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase">Total Amount</span>
+                <span className="text-sm font-black text-slate-800">${totalAmount.toFixed(2)}</span>
               </div>
-              <input 
-                type="number" value={receivedAmount}
-                className="w-full text-right text-2xl font-black p-3 bg-[#1e293b] rounded-xl border border-white/10 focus:border-green-500 outline-none text-green-500 shadow-inner"
-                placeholder="0.00"
-                onChange={(e) => setReceivedAmount(e.target.value)}
-              />
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {[1,2,3,4,5,6,7,8,9,".",0].map(n => (
+                  <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border border-slate-200 p-3 rounded-lg font-black text-slate-700 hover:bg-indigo-50">{n}</button>
+                ))}
+                <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 p-3 rounded-lg flex justify-center items-center"><FaBackspace/></button>
+              </div>
+              <div className="flex justify-between items-center border-t pt-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase">Received</span>
+                <input type="text" value={receivedAmount} readOnly className="w-20 text-right bg-white border border-slate-300 rounded-lg p-1 text-sm font-black text-emerald-600" />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase">Change</span>
+                <span className="text-sm font-black text-rose-500">${changeAmount.toFixed(2)}</span>
+              </div>
             </div>
-
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Change</span>
-              <span className="text-xl font-black text-red-500">${changeAmount.toFixed(2)}</span>
-            </div>
-
-            <button 
-              onClick={handleCheckout}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
-            >
-              Confirm Transaction
-            </button>
+            <button onClick={handlePay} disabled={!status.shift || cart.length === 0 || parseFloat(receivedAmount || 0) < totalAmount} className={`w-full py-4 rounded-2xl font-black text-xs uppercase hover:shadow-xl transition-all ${!status.shift || parseFloat(receivedAmount || 0) < totalAmount ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"}`}>Pay Now</button>
           </div>
         </aside>
       </div>

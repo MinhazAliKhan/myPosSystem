@@ -1,38 +1,57 @@
 const shiftService = require("../services/shift.service");
 
-
 exports.openShift = async (req, res, next) => {
-  try {
-    const data = await shiftService.openShift(req.user.id);
-    res.json({ success: true, message: "Shift opened with 200 cash", data });
-  } catch (err) { next(err); }
+  try { 
+    const result = await shiftService.createNewShift(req.body, req.user.id); 
+    res.status(201).json({ success: true, data: result }); 
+  } catch (error) { next(error); }
+};
+
+exports.openDrawerSession = async (req, res, next) => {
+  try { 
+    const result = await shiftService.startDrawerSession(req.body, req.user.id); 
+    res.status(201).json({ success: true, data: result }); 
+  } catch (error) { next(error); }
+};
+
+exports.closeDrawerSession = async (req, res, next) => {
+  try { 
+    const result = await shiftService.finalizeDrawerSession(req.params.id, req.body); 
+    res.status(200).json({ success: true, data: result }); 
+  } catch (error) { next(error); }
 };
 
 exports.closeShift = async (req, res, next) => {
-  try {
-    const data = await shiftService.closeShift(req.user.id, req.body);
-    res.json({ success: true, message: "Shift closed successfully", data });
-  } catch (err) { next(err); }
+  try { 
+    const result = await shiftService.finalizeShift(req.params.id, req.body); 
+    res.status(200).json({ success: true, data: result }); 
+  } catch (error) { next(error); }
 };
 
-exports.getShifts = async (req, res, next) => {
-  try {
-    const result = await shiftService.getShifts(req.query, req.user);
-    
-    // Result object-er bhetor theke data ebong total-ke ber kore direct pathachchi
-    res.json({ 
-      success: true, 
-      data: result.data,   // Shifts array
-      total: result.total  // Total count
-    });
-  } catch (err) { 
-    next(err); 
-  }
+exports.getAuditReport = async (req, res, next) => {
+  try { 
+    const result = await shiftService.getShiftAudit(req.params.id); 
+    res.status(200).json({ success: true, data: result }); 
+  } catch (error) { next(error); }
 };
-// 2. GET CURRENT SHIFT: For frontend to check active status
-exports.getCurrentShift = async (req, res, next) => {
+exports.getCurrentStatus = async (req, res, next) => {
   try {
-    const data = await shiftService.getCurrentShift(req.user.id);
-    res.json({ success: true, data });
-  } catch (err) { next(err); }
+    const Shift = require("../models/shift.model");
+    const DrawerSession = require("../models/drawerSession.model");
+    
+    // ১. বর্তমানে ওপেন আছে এমন শিফট খুঁজুন
+    const shift = await Shift.findOne({ status: "open" });
+    
+    // ২. শিফট না থাকলে খালি ডাটা পাঠান
+    if (!shift) {
+      return res.status(200).json({ success: true, data: { shift: null, drawers: [] } });
+    }
+    
+    // ৩. ঐ শিফটের আন্ডারে একটিভ ড্রয়ার খুঁজুন
+    const drawers = await DrawerSession.find({ shiftId: shift._id, status: "active" });
+    
+    res.status(200).json({ success: true, data: { shift, drawers } });
+  } catch (error) {
+    next(error);
+  }
 };

@@ -1,53 +1,56 @@
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
 import NavbarLayout from "../layouts/NavbarLayout";
 import Home from "../pages/Home";
 import Registration from "../pages/Registration";
 import Loging from "../pages/Loging";
 
 import ProtectedRoute from "../components/ProtectedRoute";
+
+// ADMIN
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminProfile from "../layouts/AdminProfile";
-import UserProfile from './../layouts/UserProfile';
 
-// Salesman Pages
-import SalesDashboard from './../pages/salesman/SalesDashboard';
-import CreateOrder from './../pages/salesman/CreateOrder';
-import SalesHistory from './../pages/salesman/SalesHistory';
-import CheckStock from './../pages/salesman/CheckStock';
-import OpenShift from './../pages/salesman/OpenShift';
-import CloseShift from './../pages/salesman/CloseShift';
+// SALESMAN
+import SalesDashboard from "../pages/salesman/SalesDashboard";
+import CreateOrder from "../pages/salesman/CreateOrder";
+import SalesHistory from "../pages/salesman/SalesHistory";
+import CheckStock from "../pages/salesman/CheckStock";
+import Management from "../pages/salesman/Management";
 
-// ফিচার ইম্পোর্ট
+// SHIFT & DRAWER (আপনার বলা সঠিক লোকেশন অনুযায়ী পাথ আপডেট করা হলো)
+import OpenShift from "../pages/salesman/shift/OpenShift";
+import CloseShift from "../pages/salesman/shift/CloseShift";
+import OpenDrawer from "../pages/salesman/drawer/OpenDrawer";
+import CloseDrawer from "../pages/salesman/drawer/CloseDrawer";
+
+// LAYOUT
+import UserProfile from "../layouts/UserProfile";
+
+// FEATURES
 import Category from "../features/categories/Category";
 import Brand from "../features/brands/Brand";
 import Unit from "../features/units/Unit";
 import Product from "../features/product/Product";
 import Supplier from "../features/supplier/Supplier";
-import Expense from "../features/expense/Expense"; // আপনার প্যাথ অনুযায়ী ঠিক আছে
-
-// কমন পেজ ইম্পোর্ট
-import Waste from "../pages/common/Waste"; 
-import Purchase from "../pages/common/Purchase"; 
+import Expense from "../features/expense/Expense";
+import Waste from "../pages/common/Waste";
+import Purchase from "../pages/common/Purchase";
 import ProductDetails from "../features/product/ProductDetais";
 
 const router = createBrowserRouter([
+  // পাবলিক ও এডমিন রাউটস (Navbar থাকবে)
   {
     path: "/",
     element: <NavbarLayout />,
     children: [
-      { path: "/", element: <Home /> },
-      { path: "/register", element: <Registration /> },
-      { path: "/login", element: <Loging /> },
-
-      // --- ADMIN ROUTES ---
+      { index: true, element: <Home /> },
+      { path: "register", element: <Registration /> },
+      { path: "login", element: <Loging /> },
       {
-        path: "/admin",
-        element: (
-          <ProtectedRoute role="ADMIN">
-            <AdminProfile />
-          </ProtectedRoute>
-        ),
+        path: "admin",
+        element: <ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>,
         children: [
           { index: true, element: <AdminDashboard /> },
           { path: "dashboard", element: <AdminDashboard /> },
@@ -57,35 +60,27 @@ const router = createBrowserRouter([
           { path: "suppliers", element: <Supplier /> },
           { path: "products", element: <Product /> },
           { path: "purchase", element: <Purchase /> },
-          { path: "waste", element: <Waste /> }, 
+          { path: "waste", element: <Waste /> },
           { path: "expenses", element: <Expense /> },
-           // Admin এর জন্য অলরেডি ছিল
-           { path:"products/getProduct/:id", element:<ProductDetails /> },
-        ]
-      },
-
-      // --- SALESMAN ROUTES ---
-      {
-        path: "/salesman",
-        element: (
-          <ProtectedRoute role="SALESMAN">
-            <UserProfile />
-          </ProtectedRoute>
-        ),
-        children: [
-          { index: true, element: <SalesDashboard /> },
-          { path: "dashboard", element: <SalesDashboard /> },
-          { path: "open-shift", element: <OpenShift /> },
-          { path: "close-shift", element: <CloseShift /> },
-          { path: "new-order", element: <CreateOrder /> },
-          { path: "my-sales", element: <SalesHistory /> },
-          { path: "inventory", element: <CheckStock /> },
-          { path: "purchase", element: <Purchase /> }, 
-          { path: "waste", element: <Waste /> }, 
-          // সেলসম্যানের জন্য এক্সপেন্স রুট নিশ্চিত করা হলো
-          { path: "expenses", element: <Expense /> }, 
+          { path: "products/getProduct/:id", element: <ProductDetails /> },
         ],
       },
+    ],
+  },
+  // সেলসম্যান রাউটস (Navbar থাকবে না, এগুলো পুরো স্ক্রিন নেবে)
+  {
+    path: "salesman",
+    element: <ProtectedRoute role="SALESMAN"><UserProfile /></ProtectedRoute>,
+    children: [
+      { index: true, element: <CreateOrder /> },
+      { path: "manage", element: <Management /> },
+      { path: "dashboard", element: <SalesDashboard /> },
+      { path: "open-shift", element: <OpenShift /> },
+      { path: "close-shift", element: <CloseShift /> },
+      { path: "open-drawer", element: <OpenDrawer /> },
+      { path: "drawer/:id/close", element: <CloseDrawer /> },
+      { path: "my-sales", element: <SalesHistory /> },
+      { path: "inventory", element: <CheckStock /> },
     ],
   },
 ]);

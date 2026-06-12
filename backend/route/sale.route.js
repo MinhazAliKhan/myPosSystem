@@ -3,49 +3,15 @@ const router = express.Router();
 const saleController = require("../controllers/sale.controller");
 const { authMiddleware, allowRoles } = require("../middlewares/auth-middleware");
 const validate = require("../middlewares/validate-middleware");
-const { 
-  createSaleSchema, 
-  saleIdParamSchema, 
-  getSalesQuerySchema, 
-  voidSaleSchema 
-} = require("../validation/sale.validation");
+const { createSaleSchema, saleIdParamSchema, voidSaleSchema, getSalesQuerySchema } = require("../validation/sale.validation");
 
-// সব সেলস রুটে লগইন আবশ্যক
 router.use(authMiddleware);
 
-// নতুন সেল তৈরি করা (শুধুমাত্র SALESMAN পারবে)
-router.post(
-  "/createSale", 
-  allowRoles("SALESMAN"), 
-  validate(createSaleSchema), 
-  saleController.createSale
-);
-
-// সেলের লিস্ট দেখা (ADMIN এবং SALESMAN উভয়েই পারবে)
-router.get(
-  "/", 
-  allowRoles("ADMIN", "SALESMAN"), 
-  validate(getSalesQuerySchema, "query"), 
-  saleController.getSales
-);
-
-// সেল ভয়েড করা
-router.patch(
-  "/:id/void", 
-  allowRoles("ADMIN", "SALESMAN"), 
-  validate(saleIdParamSchema, "params"), 
-  validate(voidSaleSchema), 
-  saleController.voidSale
-);
-
-// সেল রিফান্ড করা (শুধুমাত্র ADMIN পারবে)
-router.patch(
-  "/:id/refund", 
-  allowRoles("ADMIN", "SALESMAN"), 
-  validate(saleIdParamSchema, "params"), 
-  validate(voidSaleSchema), 
-  saleController.refundSale
-);
-router.get("/top-items/:shiftId", saleController.getTopItems);
+router.post("/create", allowRoles("SALESMAN"), validate(createSaleSchema, "body"), saleController.createSale);
+router.get("/", allowRoles("ADMIN", "SALESMAN"), validate(getSalesQuerySchema, "query"), saleController.getSales);
+router.patch("/:id/void", allowRoles("ADMIN", "SALESMAN"), validate(saleIdParamSchema, "params"), validate(voidSaleSchema, "body"), saleController.voidSale);
+router.patch("/:id/refund", allowRoles("ADMIN"), validate(saleIdParamSchema, "params"), validate(voidSaleSchema, "body"), saleController.refundSale);
+router.get("/top-items", allowRoles("ADMIN", "SALESMAN"), saleController.getTopItems);
+router.post("/expense", allowRoles("SALESMAN", "ADMIN"), saleController.addExpense);
 
 module.exports = router;
