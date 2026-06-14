@@ -20,11 +20,15 @@ const saleApi = {
   refundSale: (id, reason) => api.patch(`/v1/sales/${id}/refund`, { reason }),
 
   // Route: GET /api/v1/sales/top-items
-  // আপনার কন্ট্রোলারে কোনো shiftId প্যারামিটার নেই, তাই এটি এখন এভাবে কাজ করবে
   getTopItems: () => api.get("/v1/sales/top-items"),
 
   // Route: POST /api/v1/sales/expense
   addExpense: (expenseData) => api.post("/v1/sales/expense", expenseData),
+
+  // --- Kitchen Endpoints ---
+  // Route: GET /api/v1/sales/kitchen-orders
+  getKitchenOrders: () => api.get("/v1/sales/kitchen-orders"),
+  markOrderDone: (id) => api.patch(`/v1/sales/${id}/status`, { status: "delivered" }),
 };
 
 export default saleApi;

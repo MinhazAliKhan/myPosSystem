@@ -5,12 +5,12 @@ import NavbarLayout from "../layouts/NavbarLayout";
 import Home from "../pages/Home";
 import Registration from "../pages/Registration";
 import Loging from "../pages/Loging";
-
 import ProtectedRoute from "../components/ProtectedRoute";
 
-// ADMIN
+// ADMIN & LAYOUT
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminProfile from "../layouts/AdminProfile";
+import UserProfile from "../layouts/UserProfile";
 
 // SALESMAN
 import SalesDashboard from "../pages/salesman/SalesDashboard";
@@ -18,15 +18,14 @@ import CreateOrder from "../pages/salesman/CreateOrder";
 import SalesHistory from "../pages/salesman/SalesHistory";
 import CheckStock from "../pages/salesman/CheckStock";
 import Management from "../pages/salesman/Management";
-
-// SHIFT & DRAWER (আপনার বলা সঠিক লোকেশন অনুযায়ী পাথ আপডেট করা হলো)
 import OpenShift from "../pages/salesman/shift/OpenShift";
 import CloseShift from "../pages/salesman/shift/CloseShift";
 import OpenDrawer from "../pages/salesman/drawer/OpenDrawer";
 import CloseDrawer from "../pages/salesman/drawer/CloseDrawer";
+import DrawerReport from '../pages/salesman/drawer/DrawerReport';
 
-// LAYOUT
-import UserProfile from "../layouts/UserProfile";
+// KITCHEN
+import KitchenOrderList from "../pages/kitchen/KitchenOrderList";
 
 // FEATURES
 import Category from "../features/categories/Category";
@@ -39,8 +38,12 @@ import Waste from "../pages/common/Waste";
 import Purchase from "../pages/common/Purchase";
 import ProductDetails from "../features/product/ProductDetais";
 
+// রিপোর্ট ফিচার ফাইলসমূহ
+import DrawerReportAdmin from "../features/report/DrawerReport";
+import ShiftReport from "../features/report/ShiftReport";
+import DailySummery from "../features/report/DailySummery";
+
 const router = createBrowserRouter([
-  // পাবলিক ও এডমিন রাউটস (Navbar থাকবে)
   {
     path: "/",
     element: <NavbarLayout />,
@@ -62,12 +65,22 @@ const router = createBrowserRouter([
           { path: "purchase", element: <Purchase /> },
           { path: "waste", element: <Waste /> },
           { path: "expenses", element: <Expense /> },
+          { path: "drawer-report", element: <DrawerReportAdmin /> },
+          { path: "shift-report", element: <ShiftReport /> },
+          { path: "daily-summary-report", element: <DailySummery /> },
           { path: "products/getProduct/:id", element: <ProductDetails /> },
         ],
       },
     ],
   },
-  // সেলসম্যান রাউটস (Navbar থাকবে না, এগুলো পুরো স্ক্রিন নেবে)
+  {
+    path: "kitchen",
+    element: <ProtectedRoute role="KITCHEN"><UserProfile /></ProtectedRoute>,
+    children: [
+      { index: true, element: <KitchenOrderList /> },
+      { path: "dashboard", element: <KitchenOrderList /> },
+    ],
+  },
   {
     path: "salesman",
     element: <ProtectedRoute role="SALESMAN"><UserProfile /></ProtectedRoute>,
@@ -81,10 +94,10 @@ const router = createBrowserRouter([
       { path: "drawer/:id/close", element: <CloseDrawer /> },
       { path: "my-sales", element: <SalesHistory /> },
       { path: "inventory", element: <CheckStock /> },
+      { path: "drawer-report", element: <DrawerReport /> },
     ],
   },
 ]);
 
 const AppRouter = () => <RouterProvider router={router} />;
-
 export default AppRouter;

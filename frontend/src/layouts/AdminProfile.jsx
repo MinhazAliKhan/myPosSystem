@@ -16,53 +16,29 @@ const AdminProfile = () => {
           </NavLink>
           
           <div className="pt-4 pb-2 text-xs uppercase text-gray-500 font-bold tracking-wider">Inventory</div>
-          
-          <NavLink to="/admin/products" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Manage Products
-          </NavLink>
-
-          <NavLink to="/admin/categories" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Manage Categories
-          </NavLink>
-
-          <NavLink to="/admin/brands" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Manage Brands
-          </NavLink>
-
-          <NavLink to="/admin/units" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Manage Units
-          </NavLink>
+          <NavLink to="/admin/products" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Products</NavLink>
+          <NavLink to="/admin/categories" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Categories</NavLink>
+          <NavLink to="/admin/brands" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Brands</NavLink>
+          <NavLink to="/admin/units" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Units</NavLink>
 
           <div className="pt-4 pb-2 text-xs uppercase text-gray-500 font-bold tracking-wider">Operations</div>
           
-          <NavLink to="/admin/shifts" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Shift Reports
-          </NavLink>
+          <NavLink to="/admin/expenses" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Expenses</NavLink>
 
-          {/* নতুন যোগ করা হলো */}
-          <NavLink to="/admin/expenses" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Manage Expenses
-          </NavLink>
+          {/* নতুন রিপোর্ট সেকশন */}
+          <div className="pt-4 pb-2 text-xs uppercase text-gray-500 font-bold tracking-wider">Reports</div>
+          <NavLink to="/admin/drawer-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Drawer Report</NavLink>
+          <NavLink to="/admin/shift-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Shift Report</NavLink>
+          <NavLink to="/admin/daily-summary-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Daily Summary Report</NavLink>
+         
 
           <div className="pt-4 pb-2 text-xs uppercase text-gray-500 font-bold tracking-wider">Others</div>
-          
-          <NavLink to="/admin/suppliers" className={({ isActive }) => isActive ? activeClass : normalClass}>
-           Manage Suppliers
-          </NavLink>
-
-          <NavLink to="/admin/purchase" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Purchases
-          </NavLink>
-
-          <NavLink to="/admin/waste" className={({ isActive }) => isActive ? activeClass : normalClass}>
-            Waste Reports
-          </NavLink>
-          
+          <NavLink to="/admin/suppliers" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Suppliers</NavLink>
+          <NavLink to="/admin/purchase" className={({ isActive }) => isActive ? activeClass : normalClass}>Purchases</NavLink>
+          <NavLink to="/admin/waste" className={({ isActive }) => isActive ? activeClass : normalClass}>Waste Reports</NavLink>
         </nav>
 
-        <div className="text-xs opacity-50 pt-4 border-t border-gray-700">
-          Role: System Administrator
-        </div>
+        <div className="text-xs opacity-50 pt-4 border-t border-gray-700">Role: System Administrator</div>
       </aside>
 
       <main className="flex-1 p-8 overflow-y-auto">

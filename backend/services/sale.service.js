@@ -26,21 +26,20 @@ exports.createSale = async (data, userId) => {
       await Product.findByIdAndUpdate(product._id, { $inc: { stock: -item.quantity } }, { session });
       items.push({ ...item, name: product.name, price: product.price, costPrice: product.costPrice, unit: product.unit?.shortName || "Pcs", subtotal });
     }
-   const sale = new Sale({ 
-  items, 
-  totalAmount, 
-  totalCost, 
-  // এখানে নিশ্চিত করো যে receivedAmount আসছে, না আসলে টোটাল অ্যামাউন্টই ধরবে (পুরো ক্যাশ পেমেন্ট)
-  receivedAmount: data.receivedAmount || totalAmount, 
-  // চেঞ্জ অ্যামাউন্ট হবে রিসিভড - টোটাল
-  changeAmount: (data.receivedAmount || totalAmount) - totalAmount, 
-  paymentMethod: "cash", 
-  shift: shift._id, 
-  drawerSession: drawerSession._id, 
-  createdBy: userId 
-});
+    
+    const sale = new Sale({ 
+      items, 
+      totalAmount, 
+      totalCost, 
+      receivedAmount: data.receivedAmount || totalAmount, 
+      changeAmount: (data.receivedAmount || totalAmount) - totalAmount, 
+      paymentMethod: "cash", 
+      shift: shift._id, 
+      drawerSession: drawerSession._id, 
+      createdBy: userId 
+    });
 
-await sale.save({ session });
+    await sale.save({ session });
     await DrawerSession.findByIdAndUpdate(drawerSession._id, { $inc: { drawerSales: totalAmount } }, { session });
     await session.commitTransaction();
     return sale;
@@ -98,7 +97,6 @@ exports.getTopSellingItems = async () => {
   ]);
 };
 
-// ... আগের সব ফাংশন থাকবে, শুধু এটি যোগ করুন:
 exports.getSales = async (query) => {
   const { page = 1, limit = 10, search } = query;
   const filter = search ? { "items.name": { $regex: search, $options: "i" } } : {};
@@ -107,3 +105,14 @@ exports.getSales = async (query) => {
     .skip((parseInt(page) - 1) * parseInt(limit))
     .limit(parseInt(limit));
 };
+
+// কিচেন অর্ডারের জন্য প্রয়োজনীয় লজিক
+exports.getKitchenOrders = async () => {
+  const activeShift = await Shift.findOne({ status: "open" });
+  if (!activeShift) throw new Error("No active shift found");
+
+  return await Sale.find({ 
+    shift: activeShift._id,
+    status: "completed" 
+  }).sort({ createdAt: -1 });
+}

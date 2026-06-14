@@ -65,7 +65,7 @@ app.use("/api/v1/waste", require("./route/waste.route"));
 app.use("/api/v1/suppliers", require("./route/supplier.route"));
 app.use("/api/v1/purchases", require("./route/purchase.route"));
 app.use("/api/v1/expenses", require("./route/expense.route"));
-
+app.use("/api/v1/reports", require("./route/report.route"));
 // ----------------------
 // Error middleware
 // ----------------------

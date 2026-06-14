@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import shiftApi from "../../api/shift.service";
+import reportApi from "../../api/report.service"; // নতুন ইমপোর্ট
 import { toast } from "react-hot-toast";
 
 const Management = () => {
@@ -67,6 +68,10 @@ const Management = () => {
           disabled={!activeDrawer}
           onClick={() => activeDrawer && navigate(`/salesman/drawer/${activeDrawer._id}/close`)} 
         />
+        
+        {/* নতুন বাটন: Drawer Report */}
+        <Btn label="Drawer Report" path="/salesman/drawer-report" />
+        
         <Btn label="Dashboard" path="/salesman/dashboard" />
         <Btn label="Inventory" path="/salesman/inventory" />
         <Btn label="Sales History" path="/salesman/my-sales" />

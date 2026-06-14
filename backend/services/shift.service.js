@@ -16,7 +16,7 @@ exports.startDrawerSession = async (data, userId) => {
   return await DrawerSession.create({ 
     shiftId: activeShift._id, 
     user: userId, 
-    openingCash: data.openingCash || 0 
+    openingCash: data.openingCash || 200 
   });
 };
 
@@ -25,12 +25,19 @@ exports.finalizeDrawerSession = async (sessionId, data) => {
   if (!session) throw new Error("Session not found");
   if (session.status === "cashed-out") throw new Error("Drawer already cashed out");
   
-  const expected = session.openingCash + session.drawerSales - session.drawerExpenses;
-  session.actualCashEntered = data.actualCashEntered;
+  // ডেটা না থাকলে 0 ধরে হিসাব করা হচ্ছে
+  const opening = Number(session.openingCash) || 0;
+  const sales = Number(session.drawerSales) || 0;
+  const expenses = Number(session.drawerExpenses) || 0;
+  
+  const expected = opening + sales - expenses;
+  
+  session.actualCashEntered = Number(data.actualCashEntered) || 0;
   session.bagNumber = data.bagNumber;
-  session.shortOver = Number(data.actualCashEntered) - expected;
+  session.shortOver = session.actualCashEntered - expected;
   session.status = "cashed-out";
   session.endTime = new Date();
+  
   return await session.save();
 };
 
@@ -46,11 +53,11 @@ exports.finalizeShift = async (shiftId, data) => {
       { $match: { shiftId: new mongoose.Types.ObjectId(shiftId) } },
       { $group: { 
           _id: null, 
-          totalOpening: { $sum: "$openingCash" },
-          sales: { $sum: "$drawerSales" },
-          tax: { $sum: "$drawerTax" },
-          exp: { $sum: "$drawerExpenses" },
-          depo: { $sum: "$actualCashEntered" } 
+          totalOpening: { $sum: { $ifNull: ["$openingCash", 0] } },
+          sales: { $sum: { $ifNull: ["$drawerSales", 0] } },
+          tax: { $sum: { $ifNull: ["$drawerTax", 0] } },
+          exp: { $sum: { $ifNull: ["$drawerExpenses", 0] } },
+          depo: { $sum: { $ifNull: ["$actualCashEntered", 0] } } 
       }}
     ]).session(session);
 

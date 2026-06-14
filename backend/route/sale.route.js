@@ -13,5 +13,7 @@ router.patch("/:id/void", allowRoles("ADMIN", "SALESMAN"), validate(saleIdParamS
 router.patch("/:id/refund", allowRoles("ADMIN"), validate(saleIdParamSchema, "params"), validate(voidSaleSchema, "body"), saleController.refundSale);
 router.get("/top-items", allowRoles("ADMIN", "SALESMAN"), saleController.getTopItems);
 router.post("/expense", allowRoles("SALESMAN", "ADMIN"), saleController.addExpense);
-
+router.get("/kitchen-orders", authMiddleware, allowRoles("ADMIN", "MANAGER", "KITCHEN"), saleController.getKitchenOrders);
+// এটি কিচেন অডার রিমুভ করার জন্য
+router.patch("/:id/status", allowRoles("KITCHEN", "ADMIN"), saleController.updateSaleStatus);
 module.exports = router;
