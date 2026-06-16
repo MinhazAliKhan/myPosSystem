@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// এখানে তোমার Render থেকে পাওয়া ব্যাকএন্ড লিঙ্কটি দাও (যেমন: https://your-backend.onrender.com)
-const BASE_URL = "https://https://mcdpos.onrender.com/api"; 
+// এখানে ভেরিয়েবলটি সঠিকভাবে সেট করা হয়েছে
+const BASE_URL = "https://mcdpos.onrender.com/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, 
+  withCredentials: true,
 });
 
 api.interceptors.response.use(
@@ -21,7 +21,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // এখানেও baseURL ব্যবহার করো
+        // এখানে BASE_URL ব্যবহার করা হয়েছে
         await axios.get(`${BASE_URL}/auth/refresh`, {
           withCredentials: true,
         });
