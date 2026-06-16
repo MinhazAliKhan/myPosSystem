@@ -26,7 +26,7 @@ const Home = () => {
         </div>
         
         <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter mb-6 leading-none">
-          MANAGE YOUR BUSINESS from here <br /> 
+          MANAGE YOUR BUSINESS <br /> 
           <span className="text-red-600 italic">FASTER & SMARTER</span>
         </h1>
         
