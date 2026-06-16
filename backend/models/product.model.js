@@ -96,4 +96,4 @@ productSchema.index({ name: "text", sku: "text" });
 productSchema.index({ category: 1, isDeleted: 1 });
 productSchema.index({ brand: 1, isDeleted: 1 });
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.models.Product || mongoose.model("Product", productSchema);

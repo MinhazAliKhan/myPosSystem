@@ -1,37 +1,22 @@
 const { z } = require("zod");
+const mongoose = require("mongoose");
 
-// ObjectId ভ্যালিডেশন এর জন্য একটি কমন ফাংশন
-const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ID format");
-
-// ১. প্রতিটি আইটেমের স্কিমা
 const purchaseItemSchema = z.object({
-  product: objectIdSchema,
-  quantity: z.number().positive("Quantity must be greater than 0"),
-  unit: objectIdSchema,
-  buyingPrice: z.number().nonnegative("Buying price cannot be negative"),
+  product: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), { message: "Invalid Product ID" }),
+  quantity: z.number().positive(),
+  buyingPrice: z.number().positive(),
+});
+
+const createPurchaseSchema = z.object({
+  supplier: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), { message: "Invalid Supplier ID" }),
+  items: z.array(purchaseItemSchema).min(1),
   note: z.string().optional(),
 });
 
-// ২. মেইন বাল্ক পারচেজ (Request Body)
-exports.bulkPurchaseSchema = z.object({
-  supplier: objectIdSchema,
-  status: z.enum(["Pending", "Received", "Returned"], {
-    required_error: "Status is required",
-  }),
-  items: z
-    .array(purchaseItemSchema)
-    .nonempty("At least one item is required in the purchase list"),
+const updatePurchaseSchema = createPurchaseSchema.partial();
+
+const purchaseIdParamSchema = z.object({ 
+  id: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), { message: "Invalid Purchase ID" }) 
 });
 
-// ৩. আইডি প্যারামিটার (Request Params)
-exports.purchaseIdParamSchema = z.object({
-  id: objectIdSchema,
-});
-
-// ৪. কোয়েরি ভ্যালিডেশন (Request Query)
-exports.getPurchaseQuerySchema = z.object({
-  supplier: z.string().optional(),
-  status: z.enum(["Pending", "Received", "Returned"]).optional(),
-  page: z.string().optional(),
-  limit: z.string().optional(),
-});
+module.exports = { createPurchaseSchema, updatePurchaseSchema, purchaseIdParamSchema };

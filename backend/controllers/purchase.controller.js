@@ -1,43 +1,43 @@
 const purchaseService = require("../services/purchase.service");
 
-exports.createPurchase = async (req, res) => {
+exports.getAllPurchases = async (req, res, next) => {
   try {
-    const result = await purchaseService.receiveBulkPurchase(req.body, req.user.id);
-    res.status(201).json({ success: true, message: "Purchase recorded successfully", data: result });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
+    const result = await purchaseService.getAllPurchases(req.query, req.user.id);
+    // রেজাল্টটি সরাসরি এখানে পাঠাও
+    res.status(200).json({ 
+      success: true, 
+      data: result.data, 
+      total: result.total,
+      page: result.page
+    });
+  } catch (err) { next(err); }
 };
 
-exports.getPurchases = async (req, res) => {
+exports.getPurchaseById = async (req, res, next) => {
   try {
-    const result = await purchaseService.getAllPurchases(req.query);
-    res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+    const data = await purchaseService.getPurchaseById(req.params.id, req.user.id);
+    if (!data) return next(new Error("Purchase not found"));
+    res.status(200).json({ success: true, data });
+  } catch (err) { next(err); }
 };
 
-exports.getSummary = async (req, res) => {
+exports.createPurchase = async (req, res, next) => {
   try {
-    const result = await purchaseService.getPurchaseSummary();
-    res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+    const data = await purchaseService.createPurchase(req.body, req.user.id);
+    res.status(201).json({ success: true, data });
+  } catch (err) { next(err); }
 };
-// ৪. নির্দিষ্ট একটি পারচেজ আইডি দিয়ে দেখা
-exports.getSinglePurchase = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await purchaseService.getPurchaseById(id);
-    
-    if (!result) {
-      return res.status(404).json({ success: false, message: "Purchase record not found" });
-    }
 
-    res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+exports.updatePurchase = async (req, res, next) => {
+  try {
+    const data = await purchaseService.updatePurchase(req.params.id, req.body, req.user.id);
+    res.status(200).json({ success: true, message: "Purchase updated", data });
+  } catch (err) { next(err); }
+};
+
+exports.deletePurchase = async (req, res, next) => {
+  try {
+    await purchaseService.deletePurchase(req.params.id, req.user.id);
+    res.status(200).json({ success: true, message: "Purchase deleted" });
+  } catch (err) { next(err); }
 };

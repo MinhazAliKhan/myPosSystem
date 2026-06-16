@@ -2,15 +2,9 @@ import api from "./api";
 
 const purchaseApi = {
   /**
-   * সব পারচেজ লিস্ট দেখা (Pagination & Filter সহ)
-   * params: { supplier, status, page, limit }
+   * সব পারচেজ লিস্ট দেখা
    */
   getAllPurchases: (params) => api.get("/v1/purchases", { params }),
-
-  /**
-   * পারচেজ সামারি দেখা (ড্যাশবোর্ড কার্ডের জন্য)
-   */
-  getPurchaseSummary: () => api.get("/v1/purchases/summary"),
 
   /**
    * নির্দিষ্ট একটি পারচেজ ডিটেইলস দেখা
@@ -18,10 +12,21 @@ const purchaseApi = {
   getSinglePurchase: (id) => api.get(`/v1/purchases/${id}`),
 
   /**
-   * নতুন বাল্ক পারচেজ রেকর্ড করা
-   * data: { supplier, status, items: [...] }
+   * নতুন পারচেজ রেকর্ড করা
+   * রুট: router.post("/create", ...)
    */
-  createBulkPurchase: (data) => api.post("/v1/purchases", data),
+  createPurchase: (data) => api.post("/v1/purchases/create", data),
+
+  /**
+   * পারচেজ আপডেট করা
+   * রুট: router.patch("/update/:id", ...)
+   */
+  updatePurchase: (id, data) => api.patch(`/v1/purchases/update/${id}`, data),
+
+  /**
+   * পারচেজ ডিলিট করা
+   */
+  deletePurchase: (id) => api.delete(`/v1/purchases/delete/${id}`),
 };
 
 export default purchaseApi;
