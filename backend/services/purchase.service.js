@@ -1,5 +1,5 @@
-const Purchase = require("../models/Purchase.model");
-const Product = require("../models/Product.model");
+const Purchase = require("../models/purchase.model");
+const Product = require("../models/product.model");
 const mongoose = require("mongoose");
 
 const getAllPurchases = async (query, userId) => {
