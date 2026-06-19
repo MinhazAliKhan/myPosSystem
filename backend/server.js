@@ -26,10 +26,16 @@ const corsOrigin = isProduction ? process.env.CLIENT_URL : 'http://localhost:517
 // ----------------------
 app.set('trust proxy', 1);
 app.disable("x-powered-by");
-app.use(cors({ origin: "https://mcdposfrontend.onrender.com",
+const allowedOrigin = process.env.NODE_ENV === "production" 
+  ? "https://mcdposfrontend.onrender.com" 
+  : "http://localhost:5173"; // আপনার লোকাল ফ্রন্টএন্ড পোর্ট (যেমন: 5173 বা 3000)
+
+app.use(cors({
+  origin: allowedOrigin,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"] }));
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+}));
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

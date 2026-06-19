@@ -5,13 +5,12 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
-  // আইফোনের সাফারির জন্য প্রোডাকশনে secure অবশ্যই true হতে হবে
-  secure: true, 
-  // ক্রস-ডোমেইন কুকি সাফারিতে কাজ করার জন্য sameSite অবশ্যই 'none' হতে হবে
-  sameSite: 'none', 
+  // প্রোডাকশনে হলে true, লোকালহোস্টে হলে false
+  secure: process.env.NODE_ENV === "production", 
+  // প্রোডাকশনে 'none', লোকালহোস্টে 'lax' বা 'none'
+  sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
   path: "/",
 };
-
 const createAccessToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.ACCESS_SECRET, { expiresIn: process.env.ACCESS_EXPIRE || "15m" });
 
