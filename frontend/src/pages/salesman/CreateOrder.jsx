@@ -84,109 +84,93 @@ const CreateOrder = () => {
       <Toaster />
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-3xl shadow-2xl w-80 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm text-center">
             <FaCheckCircle className="text-emerald-500 mx-auto mb-4" size={50} />
             <h2 className="text-xl font-black text-slate-800 mb-6">Payment Successful</h2>
             <div className="flex justify-between py-2 border-b">
-              <span className="text-slate-400 font-bold text-xs uppercase">Received:</span>
-              <span className="font-black text-sm">${parseFloat(receivedAmount || 0).toFixed(2)}</span>
+              <span className="text-slate-400 font-bold text-xs lg:text-sm uppercase">Received:</span>
+              <span className="font-black text-sm lg:text-lg">${parseFloat(receivedAmount || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between py-2 mb-8">
-              <span className="text-slate-400 font-bold text-xs uppercase">Change:</span>
-              <span className="font-black text-rose-500 text-lg">${changeAmount.toFixed(2)}</span>
+              <span className="text-slate-400 font-bold text-xs lg:text-sm uppercase">Change:</span>
+              <span className="font-black text-rose-500 text-lg lg:text-2xl">${changeAmount.toFixed(2)}</span>
             </div>
-            <button onClick={closeModal} className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 uppercase text-xs">Done</button>
+            <button onClick={closeModal} className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 uppercase text-xs lg:text-base">Done</button>
           </div>
         </div>
       )}
 
-      <header className="h-16 bg-white px-8 flex justify-between items-center border-b border-slate-200 shrink-0">
-        <div className="flex items-center gap-3 text-indigo-600 font-black tracking-widest uppercase text-xs">
+      <header className="h-14 bg-white px-4 flex justify-between items-center border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-2 text-indigo-600 font-black tracking-widest uppercase text-[10px] lg:text-xs">
           <FaCashRegister /> {status.shift ? "SHIFT ACTIVE" : "SHIFT CLOSED"}
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-full border border-slate-200">
-            <FaUserCircle className="text-indigo-500" size={20} />
-            <div className="text-right">
-              <p className="text-[10px] font-black uppercase text-slate-800">{user?.userName || "User"}</p>
-              <p className="text-[8px] font-bold uppercase text-indigo-500">{user?.role || "Staff"}</p>
-            </div>
-          </div>
-          <button onClick={() => { logout(); navigate("/login"); }} className="text-rose-500 hover:text-rose-600"><FaPowerOff size={16} /></button>
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/salesman/manage")} className="flex items-center gap-1 text-[10px] lg:text-xs font-black text-indigo-600 uppercase">
+             <FaCog /> Manage
+          </button>
+          <button onClick={() => { logout(); navigate("/login"); }} className="text-rose-500"><FaPowerOff size={16} /></button>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-6 gap-6">
-        <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-          <div className="relative shrink-0">
-            <FaSearch className="absolute left-4 top-4 text-slate-400" />
-            <input type="text" placeholder="Search products..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-400 text-sm" onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-3 gap-3">
+        <div className="flex-1 flex flex-col gap-3 overflow-hidden">
+          <input type="text" placeholder="Search products..." className="w-full p-4 rounded-2xl bg-white border border-slate-200 text-sm lg:text-base" onChange={(e) => setSearchTerm(e.target.value)} />
           
-          {/* Category line with Manage button on the right */}
-          <div className="flex items-center justify-between gap-4 shrink-0">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {categories.map((cat, index) => (
-                <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? "bg-indigo-600 text-white shadow-lg" : "bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50"}`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => navigate("/salesman/manage")} className="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shrink-0">
-              <FaCog size={14} /> <span className="font-black uppercase text-[10px]">Manage</span>
-            </button>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {categories.map((cat, index) => (
+              <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] lg:text-xs font-black uppercase whitespace-nowrap ${selectedCategory === cat ? "bg-indigo-600 text-white" : "bg-white border text-slate-600"}`}>
+                {cat}
+              </button>
+            ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 content-start">
+          <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 content-start pb-4">
             {filteredProducts.map((p) => (
-              <button key={p._id} onClick={() => addToCart(p)} className="bg-white border-b-4 border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50 p-4 rounded-2xl transition-all shadow-sm flex flex-col items-center justify-center gap-2 h-28">
-                <span className="text-[11px] font-bold text-slate-700 text-center uppercase">{p.name}</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Stock: {p.stock}</span>
-                <span className="text-[10px] font-black text-white bg-indigo-500 px-3 py-1 rounded-full">${p.price}</span>
+              <button key={p._id} onClick={() => addToCart(p)} className="bg-white border-b-4 border-indigo-200 p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-1 h-24 lg:h-32">
+                <span className="text-[10px] lg:text-xs font-bold text-slate-700 text-center uppercase truncate w-full">{p.name}</span>
+                <span className="text-[10px] lg:text-sm font-black text-white bg-indigo-500 px-3 py-1 rounded-full">${p.price}</span>
               </button>
             ))}
           </div>
         </div>
 
         <aside className="w-full lg:w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-[45vh] lg:h-full shadow-lg overflow-hidden shrink-0">
-          <div className="p-4 border-b border-slate-100 font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="p-3 border-b font-black text-[10px] lg:text-xs uppercase text-slate-400">Current Order</div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {cart.map((item, i) => (
-              <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <div className="flex flex-col">
-                  <p className="text-[11px] font-bold text-slate-800">{item.name} <span className="text-indigo-500 font-black">x{item.quantity}</span></p>
-                </div>
+              <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border">
+                <p className="text-[11px] lg:text-sm font-bold">{item.name} <span className="text-indigo-500">x{item.quantity}</span></p>
                 <div className="flex items-center gap-3">
-                   <span className="text-[11px] font-black text-slate-700">${(item.price * item.quantity).toFixed(2)}</span>
-                   <button onClick={() => removeFromCart(item.productId)} className="text-rose-400 hover:text-rose-600"><FaTrash size={12} /></button>
+                   <span className="text-[11px] lg:text-sm font-black">${(item.price * item.quantity).toFixed(2)}</span>
+                   <button onClick={() => removeFromCart(item.productId)} className="text-rose-400"><FaTrash size={12} /></button>
                 </div>
               </div>
             ))}
           </div>
           
-          <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
-            <div className="space-y-2 mb-2">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase">Total Amount</span>
-                <span className="text-sm font-black text-slate-800">${totalAmount.toFixed(2)}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1">
-                {[1,2,3,4,5,6,7,8,9,".",0].map(n => (
-                  <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border border-slate-200 p-2 rounded-lg font-black text-slate-700 hover:bg-indigo-50 text-xs">{n}</button>
-                ))}
-                <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 p-2 rounded-lg flex justify-center items-center text-xs"><FaBackspace/></button>
-              </div>
-              <div className="flex justify-between items-center border-t pt-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase">Received</span>
-                <input type="text" value={receivedAmount} readOnly className="w-16 text-right bg-white border border-slate-300 rounded-lg p-1 text-[11px] font-black text-emerald-600" />
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase">Change</span>
-                <span className="text-[11px] font-black text-rose-500">${changeAmount.toFixed(2)}</span>
-              </div>
+          <div className="p-3 border-t bg-slate-50">
+            <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="bg-white p-2 rounded-lg border text-center">
+                    <p className="text-[8px] lg:text-[10px] text-slate-400 uppercase font-black">Total</p>
+                    <p className="text-xs lg:text-base font-black text-slate-800">${totalAmount.toFixed(2)}</p>
+                </div>
+                <div className="bg-white p-2 rounded-lg border text-center">
+                    <p className="text-[8px] lg:text-[10px] text-slate-400 uppercase font-black">Received</p>
+                    <p className="text-xs lg:text-base font-black text-emerald-600">${parseFloat(receivedAmount || 0).toFixed(2)}</p>
+                </div>
+                <div className="bg-white p-2 rounded-lg border text-center col-span-2">
+                    <p className="text-[8px] lg:text-[10px] text-slate-400 uppercase font-black">Change</p>
+                    <p className="text-sm lg:text-lg font-black text-rose-500">${changeAmount.toFixed(2)}</p>
+                </div>
             </div>
-            <button onClick={handlePay} disabled={!status.shift || cart.length === 0 || parseFloat(receivedAmount || 0) < totalAmount} className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase hover:shadow-xl transition-all ${!status.shift || parseFloat(receivedAmount || 0) < totalAmount ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"}`}>Pay Now</button>
+            <div className="grid grid-cols-6 gap-1 mb-2">
+              {[1,2,3,4,5,6,7,8,9,0,"."].map(n => (
+                <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border p-2 rounded-lg font-bold text-xs lg:text-sm">{n}</button>
+              ))}
+              <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 rounded-lg flex justify-center items-center"><FaBackspace/></button>
+            </div>
+            <button onClick={handlePay} disabled={!status.shift || cart.length === 0} className="w-full py-4 bg-emerald-600 text-white font-black text-xs lg:text-base uppercase rounded-xl">Pay Now</button>
           </div>
         </aside>
       </div>
