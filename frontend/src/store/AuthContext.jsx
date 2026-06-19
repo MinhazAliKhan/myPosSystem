@@ -8,10 +8,8 @@ export const AuthProvider = ({ children }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ইউজার অথেনটিকেশন চেক করার মেইন ফাংশন
   const checkAuth = async () => {
-    // যদি অলরেডি লোডিং থাকে, তবে রিকোয়েস্ট পাঠাবে না (লুপ আটকানোর জন্য)
-    if (!isLoading) setIsLoading(true); 
-
     try {
       const res = await api.get('/auth/profile');
       if (res.data?.user) {
@@ -22,6 +20,10 @@ export const AuthProvider = ({ children }) => {
         setIsLogin(false);
       }
     } catch (error) {
+      // ৪০১ হলে কনসোলে এরর দেখানোর দরকার নেই, কারণ এটি স্বাভাবিক (টোকেন নেই)
+      if (error.response?.status !== 401) {
+        console.error('Auth check failed:', error);
+      }
       setUser(null);
       setIsLogin(false);
     } finally {
@@ -30,14 +32,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // শুধুমাত্র মাউন্ট হওয়ার সময় একবার কল হবে
     checkAuth();
   }, []);
 
+  // রেজিস্ট্রেশন ফাংশন
   const register = async (formData) => {
     return await api.post('/auth/register', formData);
   };
 
+  // লগইন ফাংশন
   const login = async (formData) => {
     const res = await api.post('/auth/login', formData);
     if (res.data?.user) {
@@ -47,12 +50,14 @@ export const AuthProvider = ({ children }) => {
     return res.data.user;
   };
 
+  // লগআউট ফাংশন
   const logout = async () => {
     try {
       await api.post('/auth/logout');
     } catch (err) {
       console.error("Logout error", err);
     } finally {
+      // সার্ভারে যাই হোক, ফ্রন্টেন্ড স্টেট ক্লিয়ার করে দেওয়া ভালো
       setUser(null);
       setIsLogin(false);
     }
@@ -75,6 +80,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// কাস্টম হুক ব্যবহারের জন্য
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
