@@ -22,85 +22,82 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
   useEffect(() => {
     if (isEditing && initialData) {
       setInvoiceData({ supplier: initialData.supplier?._id || initialData.supplier });
-      setItems(initialData.items);
+      setItems(initialData.items.map(item => ({
+        product: item.product?._id || item.product,
+        quantity: item.quantity,
+        buyingPrice: item.buyingPrice
+      })));
     } else {
-      setInvoiceData({ supplier: "" });
-      setItems([{ product: "", quantity: 0, buyingPrice: 0 }]);
+      resetForm();
     }
   }, [isEditing, initialData]);
 
+  const resetForm = () => {
+    setInvoiceData({ supplier: "" });
+    setItems([{ product: "", quantity: 0, buyingPrice: 0 }]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // ভ্যালিডেশন এবং টাইপ কনভার্সন
     const processedItems = items.map(item => ({
-      ...item,
+      product: item.product,
       quantity: Number(item.quantity),
       buyingPrice: Number(item.buyingPrice)
     }));
 
     try {
-      if (isEditing) await purchaseApi.updatePurchase(initialData._id, { ...invoiceData, items: processedItems });
-      else await purchaseApi.createPurchase({ ...invoiceData, items: processedItems });
+      const payload = { ...invoiceData, items: processedItems };
+      if (isEditing) await purchaseApi.updatePurchase(initialData._id, payload);
+      else await purchaseApi.createPurchase(payload);
       
       toast.success(isEditing ? "Updated successfully!" : "Created successfully!");
       onSave();
       setIsEditing(false);
-      setInvoiceData({ supplier: "" });
-      setItems([{ product: "", quantity: 0, buyingPrice: 0 }]);
-    } catch (err) { toast.error("Error occurred"); }
+      resetForm();
+    } catch (err) { 
+      toast.error("Failed to save. Check your inputs.");
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mb-8">
-      <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">
-        {isEditing ? "Edit Purchase Record" : "Add New Purchase"}
-      </h3>
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-8">
+      <h3 className="text-lg font-bold text-gray-700 mb-4">{isEditing ? "Edit Purchase" : "Add New Purchase"}</h3>
       
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-600 mb-2">Select Supplier</label>
-        <select required value={invoiceData.supplier} onChange={(e) => setInvoiceData({supplier: e.target.value})} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="">-- Choose Supplier --</option>
+      <div className="mb-4">
+        <label className="block text-sm text-gray-600 mb-1">Supplier</label>
+        <select required value={invoiceData.supplier} onChange={(e) => setInvoiceData({supplier: e.target.value})} className="w-full p-2 border rounded-md">
+          <option value="">Select Supplier</option>
           {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
         </select>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {items.map((item, idx) => (
-          <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-4 rounded-xl">
-            <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Product</label>
-              <select required value={item.product?._id || item.product} onChange={(e) => {
-                const newItems = [...items]; newItems[idx].product = e.target.value; setItems(newItems);
-              }} className="w-full p-2 border rounded-lg outline-none">
-                <option value="">Select Product</option>
-                {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Qty</label>
-              <input type="number" className="w-full p-2 border rounded-lg outline-none" value={item.quantity} onChange={(e) => {
-                const newItems = [...items]; newItems[idx].quantity = e.target.value; setItems(newItems);
-              }} />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Price</label>
-              <input type="number" className="w-full p-2 border rounded-lg outline-none" value={item.buyingPrice} onChange={(e) => {
-                const newItems = [...items]; newItems[idx].buyingPrice = e.target.value; setItems(newItems);
-              }} />
-            </div>
-            <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 hover:text-red-700 font-bold p-2">Remove</button>
+          <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded border">
+            <select required value={item.product} onChange={(e) => {
+              const newItems = [...items]; newItems[idx].product = e.target.value; setItems(newItems);
+            }} className="flex-1 p-2 border rounded text-sm">
+              <option value="">Product</option>
+              {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+            </select>
+            <input type="number" placeholder="Qty" className="w-20 p-2 border rounded text-sm" value={item.quantity} onChange={(e) => {
+              const newItems = [...items]; newItems[idx].quantity = e.target.value; setItems(newItems);
+            }} />
+            <input type="number" placeholder="Price" className="w-20 p-2 border rounded text-sm" value={item.buyingPrice} onChange={(e) => {
+              const newItems = [...items]; newItems[idx].buyingPrice = e.target.value; setItems(newItems);
+            }} />
+            <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 font-bold px-2">×</button>
           </div>
         ))}
       </div>
 
-      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-4 text-blue-600 font-semibold hover:underline">+ Add Another Product</button>
+      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-3 text-sm text-blue-600 font-medium">+ Add Item</button>
       
-      <div className="mt-8 flex gap-4">
-        {isEditing && (
-          <button type="button" onClick={() => setIsEditing(false)} className="flex-1 bg-gray-200 py-3 rounded-lg font-bold">Cancel</button>
-        )}
-        <button type="submit" className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-200">
-          {isEditing ? "Update Record" : "Save Purchase"}
-        </button>
+      <div className="flex gap-2 mt-6">
+        {isEditing && <button type="button" onClick={() => { setIsEditing(false); resetForm(); }} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>}
+        <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
       </div>
     </form>
   );
