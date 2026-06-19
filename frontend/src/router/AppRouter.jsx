@@ -1,49 +1,12 @@
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+// ... আপনার বাকি ইমপোর্টগুলো আগের মতোই থাকবে
 
-import NavbarLayout from "../layouts/NavbarLayout";
-import Home from "../pages/Home";
-import Registration from "../pages/Registration";
-import Loging from "../pages/Loging";
-import ProtectedRoute from "../components/ProtectedRoute";
-
-// ADMIN & LAYOUT
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import AdminProfile from "../layouts/AdminProfile";
-import UserProfile from "../layouts/UserProfile";
-
-// SALESMAN
-import SalesDashboard from "../pages/salesman/SalesDashboard";
-import CreateOrder from "../pages/salesman/CreateOrder";
-import SalesHistory from "../pages/salesman/SalesHistory";
-import CheckStock from "../pages/salesman/CheckStock";
-import Management from "../pages/salesman/Management";
-import OpenShift from "../pages/salesman/shift/OpenShift";
-import CloseShift from "../pages/salesman/shift/CloseShift";
-import OpenDrawer from "../pages/salesman/drawer/OpenDrawer";
-import CloseDrawer from "../pages/salesman/drawer/CloseDrawer";
-import DrawerReport from '../pages/salesman/drawer/DrawerReport';
-
-// KITCHEN
-import KitchenOrderList from "../pages/kitchen/KitchenOrderList";
-
-// FEATURES
-import Category from "../features/categories/Category";
-import Brand from "../features/brands/Brand";
-import Unit from "../features/units/Unit";
-import Product from "../features/product/Product";
-import Supplier from "../features/supplier/Supplier";
-import Expense from "../features/expense/Expense";
-import Waste from "../pages/common/Waste";
-import Purchase from "../pages/common/Purchase";
-import ProductDetails from "../features/product/ProductDetais";
-
-// রিপোর্ট ফিচার ফাইলসমূহ
-import DrawerReportAdmin from "../features/report/DrawerReport";
-import ShiftReport from "../features/report/ShiftReport";
-import DailySummery from "../features/report/DailySummery";
+// Auth হুকটি ইমপোর্ট করুন
+import { useAuth } from "../context/AuthContext"; 
 
 const router = createBrowserRouter([
+  // ... আপনার রাউটার কনফিগারেশন হুবহু একই থাকবে
   {
     path: "/",
     element: <NavbarLayout />,
@@ -99,5 +62,15 @@ const router = createBrowserRouter([
   },
 ]);
 
-const AppRouter = () => <RouterProvider router={router} />;
+const AppRouter = () => {
+  const { isLoading } = useAuth();
+
+  // অ্যাপ লোড হওয়ার সময় রিফ্রেশ লুপ বা এরর রোধ করতে এটি নিশ্চিত করুন
+  if (isLoading) {
+    return <div>Loading...</div>; 
+  }
+
+  return <RouterProvider router={router} />;
+};
+
 export default AppRouter;
