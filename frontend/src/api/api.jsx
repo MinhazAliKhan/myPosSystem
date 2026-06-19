@@ -1,17 +1,20 @@
 import axios from "axios";
 
+// রেন্ডারের ব্যাকএন্ড URL ব্যবহার করুন
+const API_BASE_URL = process.env.NODE_ENV === "production" 
+  ? "https://mcdpos.onrender.com/api" 
+  : "http://localhost:5000/api";
+
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
-  withCredentials: true, // কুকি (HttpOnly) ব্যবহারের জন্য এটি বাধ্যতামূলক
+  baseURL: API_BASE_URL,
+  withCredentials: true,
 });
 
-// রেসপন্স ইন্টারসেপ্টর: টোকেন এক্সপায়ার হলে হ্যান্ডেল করবে
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // যদি 401 এরর দেয় এবং এটি রিফ্রেশ রুট না হয়, তবে নতুন টোকেন ট্রাই করবে
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -20,15 +23,10 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // ব্যাকএন্ডের রিফ্রেশ টোকেন রুট কল করা
-        await axios.get("http://localhost:5000/api/auth/refresh", {
-          withCredentials: true,
-        });
-
-        // নতুন টোকেন পাওয়ার পর অরিজিনাল রিকোয়েস্ট আবার পাঠানো
+        // এখানে সরাসরি 'api' ব্যবহার করুন যেনbaseURL ঠিকঠাক পায়
+        await api.get("/auth/refresh");
         return api(originalRequest);
       } catch (refreshError) {
-        // রিফ্রেশ ফেইল করলে সরাসরি লগআউট বা এরর রিটার্ন
         console.error("Refresh token expired or invalid");
         return Promise.reject(refreshError);
       }
