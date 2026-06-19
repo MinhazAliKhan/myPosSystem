@@ -10,26 +10,21 @@ export const AuthProvider = ({ children }) => {
 
   // ইউজার অথেনটিকেশন চেক করার মেইন ফাংশন
   const checkAuth = async () => {
-    try {
-      const res = await api.get('/auth/profile');
-      if (res.data?.user) {
-        setUser(res.data.user);
-        setIsLogin(true);
-      } else {
-        setUser(null);
-        setIsLogin(false);
-      }
-    } catch (error) {
-      // ৪০১ হলে কনসোলে এরর দেখানোর দরকার নেই, কারণ এটি স্বাভাবিক (টোকেন নেই)
-      if (error.response?.status !== 401) {
-        console.error('Auth check failed:', error);
-      }
-      setUser(null);
-      setIsLogin(false);
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true); // আগে লোডিং চালু করুন
+  try {
+    const res = await api.get('/auth/profile');
+    if (res.data?.user) {
+      setUser(res.data.user);
+      setIsLogin(true);
     }
-  };
+  } catch (error) {
+    // 401 আসা মানেই ইউজার লগড আউট
+    setUser(null);
+    setIsLogin(false);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
     checkAuth();
