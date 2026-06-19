@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaPowerOff, FaCashRegister, FaSearch, FaTrash, FaCog, FaBan, FaUndo, FaUserCircle, FaBackspace, FaCheckCircle } from "react-icons/fa";
+import { FaPowerOff, FaCashRegister, FaSearch, FaTrash, FaCog, FaUserCircle, FaBackspace, FaCheckCircle } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 import productApi from "../../api/product.service";
 import shiftApi from "../../api/shift.service";
@@ -123,25 +123,19 @@ const CreateOrder = () => {
             <FaSearch className="absolute left-4 top-4 text-slate-400" />
             <input type="text" placeholder="Search products..." className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-400 text-sm" onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
-
-          <div className="grid grid-cols-3 gap-4 shrink-0">
-            <button onClick={() => navigate("/salesman/manage")} className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex flex-col items-center gap-2">
-              <FaCog size={22} /> <span className="font-black uppercase text-[10px]">Manage</span>
-            </button>
-            <button onClick={() => navigate("/salesman/void")} className="bg-gradient-to-r from-rose-500 to-orange-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex flex-col items-center gap-2">
-              <FaBan size={22} /> <span className="font-black uppercase text-[10px]">Void</span>
-            </button>
-            <button onClick={() => navigate("/salesman/refund")} className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform flex flex-col items-center gap-2">
-              <FaUndo size={22} /> <span className="font-black uppercase text-[10px]">Refund</span>
-            </button>
-          </div>
           
-          <div className="flex gap-2 overflow-x-auto pb-2 shrink-0">
-            {categories.map((cat, index) => (
-              <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? "bg-indigo-600 text-white shadow-lg" : "bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50"}`}>
-                {cat}
-              </button>
-            ))}
+          {/* Category line with Manage button on the right */}
+          <div className="flex items-center justify-between gap-4 shrink-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map((cat, index) => (
+                <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? "bg-indigo-600 text-white shadow-lg" : "bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50"}`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => navigate("/salesman/manage")} className="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shrink-0">
+              <FaCog size={14} /> <span className="font-black uppercase text-[10px]">Manage</span>
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 content-start">
@@ -155,7 +149,6 @@ const CreateOrder = () => {
           </div>
         </div>
 
-        {/* Aside section with h-[45vh] for mobile/tablet to ensure controls are always visible */}
         <aside className="w-full lg:w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-[45vh] lg:h-full shadow-lg overflow-hidden shrink-0">
           <div className="p-4 border-b border-slate-100 font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
