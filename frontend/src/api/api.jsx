@@ -1,33 +1,31 @@
 import axios from "axios";
 
-const BASE_URL = "https://mcdpos.onrender.com/api";
-
 const api = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true, // কুকি পাঠানোর জন্য এটি ম্যান্ডেটরি
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: "https://mcdpos.onrender.com/api",
+  withCredentials: true,
 });
 
-// ইন্টারসেপ্টর লজিক
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // ৪০১ এরর হলে রিফ্রেশ টোকেন কল করবে
+    // যদি 401 হয় এবং আগে রিফ্রেশ চেষ্টা না করা হয়ে থাকে
     if (error.response?.status === 401 && !originalRequest._retry) {
+      
+      // যদি রিকোয়েস্টটি অলরেডি রিফ্রেশ রাউটের হয়, তবে লুপ না করে সরাসরি লগআউট
+      if (originalRequest.url.includes("/auth/refresh")) {
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {
-        // নতুন এক্সেস টোকেন পাওয়ার চেষ্টা করবে
         await api.get("/auth/refresh");
-        // সফল হলে আগের রিকোয়েস্টটি আবার পাঠাবে
         return api(originalRequest);
       } catch (refreshError) {
-        // রিফ্রেশও ফেইল করলে ইউজারকে আউট করে দেবে
-        window.location.href = "/login"; // সরাসরি রিডাইরেক্ট করা সেফ
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
