@@ -39,16 +39,17 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // ভ্যালিডেশন এবং টাইপ কনভার্সন
-    const processedItems = items.map(item => ({
-      product: item.product,
-      quantity: Number(item.quantity),
-      buyingPrice: Number(item.buyingPrice)
-    }));
+
+    // 1. Front-end Validation
+    if (!invoiceData.supplier) return toast.error("Please select a supplier.");
+    for (const item of items) {
+      if (!item.product) return toast.error("Please select a product for all items.");
+      if (item.quantity <= 0) return toast.error("Quantity must be greater than 0.");
+      if (item.buyingPrice <= 0) return toast.error("Price must be greater than 0.");
+    }
 
     try {
-      const payload = { ...invoiceData, items: processedItems };
+      const payload = { ...invoiceData, items: items };
       if (isEditing) await purchaseApi.updatePurchase(initialData._id, payload);
       else await purchaseApi.createPurchase(payload);
       
@@ -57,47 +58,64 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
       setIsEditing(false);
       resetForm();
     } catch (err) { 
-      toast.error("Failed to save. Check your inputs.");
+      // ব্যাকএন্ড থেকে আসা এরর মেসেজ বা ডিফল্ট মেসেজ হ্যান্ডলিং
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to save. Check your inputs.";
+      toast.error(errorMessage);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-8">
-      <h3 className="text-lg font-bold text-gray-700 mb-4">{isEditing ? "Edit Purchase" : "Add New Purchase"}</h3>
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-8">
+      <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">
+        {isEditing ? "Edit Purchase Record" : "Add New Purchase"}
+      </h3>
       
-      <div className="mb-4">
-        <label className="block text-sm text-gray-600 mb-1">Supplier</label>
-        <select required value={invoiceData.supplier} onChange={(e) => setInvoiceData({supplier: e.target.value})} className="w-full p-2 border rounded-md">
-          <option value="">Select Supplier</option>
+      <div className="mb-6">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Supplier</label>
+        <select required value={invoiceData.supplier} onChange={(e) => setInvoiceData({supplier: e.target.value})} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+          <option value="">-- Choose Supplier --</option>
           {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
         </select>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {items.map((item, idx) => (
-          <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded border">
-            <select required value={item.product} onChange={(e) => {
-              const newItems = [...items]; newItems[idx].product = e.target.value; setItems(newItems);
-            }} className="flex-1 p-2 border rounded text-sm">
-              <option value="">Product</option>
-              {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
-            </select>
-            <input type="number" placeholder="Qty" className="w-20 p-2 border rounded text-sm" value={item.quantity} onChange={(e) => {
-              const newItems = [...items]; newItems[idx].quantity = e.target.value; setItems(newItems);
-            }} />
-            <input type="number" placeholder="Price" className="w-20 p-2 border rounded text-sm" value={item.buyingPrice} onChange={(e) => {
-              const newItems = [...items]; newItems[idx].buyingPrice = e.target.value; setItems(newItems);
-            }} />
-            <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 font-bold px-2">×</button>
+          <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Product</label>
+              <select required value={item.product} onChange={(e) => {
+                const newItems = [...items]; newItems[idx].product = e.target.value; setItems(newItems);
+              }} className="w-full p-2 border rounded-lg outline-none">
+                <option value="">Select Product</option>
+                {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Qty</label>
+              <input type="number" className="w-full p-2 border rounded-lg outline-none" value={item.quantity} onChange={(e) => {
+                const newItems = [...items]; newItems[idx].quantity = Number(e.target.value); setItems(newItems);
+              }} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Price</label>
+              <input type="number" className="w-full p-2 border rounded-lg outline-none" value={item.buyingPrice} onChange={(e) => {
+                const newItems = [...items]; newItems[idx].buyingPrice = Number(e.target.value); setItems(newItems);
+              }} />
+            </div>
+            <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 hover:text-red-700 font-bold p-2 transition">Remove</button>
           </div>
         ))}
       </div>
 
-      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-3 text-sm text-blue-600 font-medium">+ Add Item</button>
+      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-4 text-blue-600 font-bold hover:underline">+ Add Another Product</button>
       
-      <div className="flex gap-2 mt-6">
-        {isEditing && <button type="button" onClick={() => { setIsEditing(false); resetForm(); }} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>}
-        <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+      <div className="mt-8 flex gap-4">
+        {isEditing && (
+          <button type="button" onClick={() => { setIsEditing(false); resetForm(); }} className="flex-1 bg-gray-200 py-3 rounded-lg font-bold hover:bg-gray-300 transition">Cancel</button>
+        )}
+        <button type="submit" className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md">
+          {isEditing ? "Update Record" : "Save Purchase"}
+        </button>
       </div>
     </form>
   );

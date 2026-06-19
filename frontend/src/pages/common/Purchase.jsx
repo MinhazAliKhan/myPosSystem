@@ -51,27 +51,35 @@ const PurchasePage = () => {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Total Purchases ({total})</h2>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Total Purchases ({total})</h2>
       
-      <div className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <select className="border p-2 rounded" value={supplierFilter} onChange={e => { setSupplierFilter(e.target.value); setCurrentPage(1); }}>
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <select className="border p-2 rounded-lg" value={supplierFilter} onChange={e => { setSupplierFilter(e.target.value); setCurrentPage(1); }}>
           <option value="">All Suppliers</option>
           {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
         </select>
-        <input type="date" className="border p-2 rounded" onChange={e => { setStartDate(e.target.value); setCurrentPage(1); }} />
-        <input type="date" className="border p-2 rounded" onChange={e => { setEndDate(e.target.value); setCurrentPage(1); }} />
+        <input type="date" className="border p-2 rounded-lg" onChange={e => { setStartDate(e.target.value); setCurrentPage(1); }} />
+        <input type="date" className="border p-2 rounded-lg" onChange={e => { setEndDate(e.target.value); setCurrentPage(1); }} />
       </div>
 
-      <PurchaseForm onSave={refreshPurchases} initialData={editingData} isEditing={isEditing} setIsEditing={setIsEditing} />
+      <PurchaseForm 
+        onSave={refreshPurchases} 
+        initialData={editingData} 
+        isEditing={isEditing} 
+        setIsEditing={setIsEditing} 
+      />
       
-      {loading ? <p>Loading...</p> : (
+      {loading ? <p className="text-center py-10">Loading...</p> : (
         <>
-          <PurchaseTable purchases={purchases} onEdit={handleEdit} onDelete={handleDelete} />
-          <div className="flex justify-center mt-4 gap-2">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="border px-4 py-1">Prev</button>
-            <span className="py-1">Page {currentPage}</span>
-            <button disabled={purchases.length < limit} onClick={() => setCurrentPage(p => p + 1)} className="border px-4 py-1">Next</button>
+          <PurchaseTable purchases={purchases} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+          />
+          <div className="flex justify-center mt-6 gap-4">
+            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="border px-6 py-2 rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50">Prev</button>
+            <span className="py-2 px-4 font-bold">Page {currentPage}</span>
+            <button disabled={purchases.length < limit} onClick={() => setCurrentPage(p => p + 1)} className="border px-6 py-2 rounded-lg bg-white hover:bg-gray-100 transition disabled:opacity-50">Next</button>
           </div>
         </>
       )}
