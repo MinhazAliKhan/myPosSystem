@@ -117,7 +117,6 @@ const CreateOrder = () => {
         </div>
       </header>
 
-      {/* Responsive Container */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-6 gap-6">
         <div className="flex-1 flex flex-col gap-6 overflow-hidden">
           <div className="relative shrink-0">
@@ -156,9 +155,9 @@ const CreateOrder = () => {
           </div>
         </div>
 
-        {/* Cart Section - iPad Responsive Fix */}
-        <aside className="w-full lg:w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-[400px] lg:h-full shadow-lg overflow-hidden">
-          <div className="p-6 border-b border-slate-100 font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
+        {/* Aside section with h-[45vh] for mobile/tablet to ensure controls are always visible */}
+        <aside className="w-full lg:w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-[45vh] lg:h-full shadow-lg overflow-hidden shrink-0">
+          <div className="p-4 border-b border-slate-100 font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {cart.map((item, i) => (
               <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
@@ -173,28 +172,28 @@ const CreateOrder = () => {
             ))}
           </div>
           
-          <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0">
-            <div className="space-y-3 mb-4">
+          <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
+            <div className="space-y-2 mb-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase">Total Amount</span>
                 <span className="text-sm font-black text-slate-800">${totalAmount.toFixed(2)}</span>
               </div>
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-3 gap-1">
                 {[1,2,3,4,5,6,7,8,9,".",0].map(n => (
-                  <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border border-slate-200 p-3 rounded-lg font-black text-slate-700 hover:bg-indigo-50">{n}</button>
+                  <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border border-slate-200 p-2 rounded-lg font-black text-slate-700 hover:bg-indigo-50 text-xs">{n}</button>
                 ))}
-                <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 p-3 rounded-lg flex justify-center items-center"><FaBackspace/></button>
+                <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 p-2 rounded-lg flex justify-center items-center text-xs"><FaBackspace/></button>
               </div>
-              <div className="flex justify-between items-center border-t pt-2">
+              <div className="flex justify-between items-center border-t pt-1">
                 <span className="text-[10px] font-black text-slate-400 uppercase">Received</span>
-                <input type="text" value={receivedAmount} readOnly className="w-20 text-right bg-white border border-slate-300 rounded-lg p-1 text-sm font-black text-emerald-600" />
+                <input type="text" value={receivedAmount} readOnly className="w-16 text-right bg-white border border-slate-300 rounded-lg p-1 text-[11px] font-black text-emerald-600" />
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase">Change</span>
-                <span className="text-sm font-black text-rose-500">${changeAmount.toFixed(2)}</span>
+                <span className="text-[11px] font-black text-rose-500">${changeAmount.toFixed(2)}</span>
               </div>
             </div>
-            <button onClick={handlePay} disabled={!status.shift || cart.length === 0 || parseFloat(receivedAmount || 0) < totalAmount} className={`w-full py-4 rounded-2xl font-black text-xs uppercase hover:shadow-xl transition-all ${!status.shift || parseFloat(receivedAmount || 0) < totalAmount ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"}`}>Pay Now</button>
+            <button onClick={handlePay} disabled={!status.shift || cart.length === 0 || parseFloat(receivedAmount || 0) < totalAmount} className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase hover:shadow-xl transition-all ${!status.shift || parseFloat(receivedAmount || 0) < totalAmount ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"}`}>Pay Now</button>
           </div>
         </aside>
       </div>
