@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import shiftApi from "../../api/shift.service";
-import reportApi from "../../api/report.service"; // নতুন ইমপোর্ট
+import reportApi from "../../api/report.service";
 import { toast } from "react-hot-toast";
 
 const Management = () => {
@@ -33,7 +33,7 @@ const Management = () => {
     <button
       onClick={onClick ? onClick : () => navigate(path)}
       disabled={disabled || loading}
-      className={`group relative w-full p-6 rounded-3xl font-bold text-[13px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center 
+      className={`group relative w-full p-4 md:p-6 rounded-3xl font-bold text-[11px] md:text-[13px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center 
       ${disabled 
         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
         : color === "red" 
@@ -45,19 +45,19 @@ const Management = () => {
     >
       {loading ? "Loading..." : label}
       {!disabled && (
-        <span className="absolute bottom-4 opacity-0 group-hover:opacity-100 transition-opacity text-[9px]">●●●</span>
+        <span className="absolute bottom-3 md:bottom-4 opacity-0 group-hover:opacity-100 transition-opacity text-[9px]">●●●</span>
       )}
     </button>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-12 flex flex-col items-center">
-      <div className="w-full max-w-4xl mb-10 text-center">
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">MANAGEMENT</h1>
-        <p className="text-gray-400 text-xs font-medium tracking-[0.3em] uppercase mt-2">Station Control Center</p>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-12 flex flex-col items-center">
+      <div className="w-full max-w-4xl mb-8 md:mb-10 text-center">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">MANAGEMENT</h1>
+        <p className="text-gray-400 text-[10px] md:text-xs font-medium tracking-[0.3em] uppercase mt-2">Station Control Center</p>
       </div>
 
-      <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
         <Btn label="Open Shift" path="/salesman/open-shift" color="red" disabled={!!activeShift} />
         <Btn label="Close Shift" path="/salesman/close-shift" color="red" disabled={!activeShift} />
         <Btn label="Open Drawer" path="/salesman/open-drawer" color="emerald" disabled={!activeShift || !!activeDrawer} />
@@ -69,13 +69,13 @@ const Management = () => {
           onClick={() => activeDrawer && navigate(`/salesman/drawer/${activeDrawer._id}/close`)} 
         />
         
-        {/* নতুন বাটন: Drawer Report */}
         <Btn label="Drawer Report" path="/salesman/drawer-report" />
-        
         <Btn label="Dashboard" path="/salesman/dashboard" />
         <Btn label="Inventory" path="/salesman/inventory" />
         <Btn label="Sales History" path="/salesman/my-sales" />
-        <Btn label="POS Terminal" path="/salesman" color="red" disabled={!activeDrawer} />
+        
+        {/* POS Terminal এখন সবসময় অ্যাক্টিভ */}
+        <Btn label="POS Terminal" path="/salesman" color="red" />
       </div>
     </div>
   );
