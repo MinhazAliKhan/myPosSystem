@@ -34,7 +34,7 @@ const allowedOrigin = isProduction
 app.use(cors({
   origin: allowedOrigin,
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   preflightContinue: false,
   optionsSuccessStatus: 204
