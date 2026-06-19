@@ -40,7 +40,6 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Front-end Validation
     if (!invoiceData.supplier) return toast.error("Please select a supplier.");
     for (const item of items) {
       if (!item.product) return toast.error("Please select a product for all items.");
@@ -58,21 +57,20 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
       setIsEditing(false);
       resetForm();
     } catch (err) { 
-      // ব্যাকএন্ড থেকে আসা এরর মেসেজ বা ডিফল্ট মেসেজ হ্যান্ডলিং
       const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to save. Check your inputs.";
       toast.error(errorMessage);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-8">
-      <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8 max-w-4xl mx-auto">
+      <h3 className="text-2xl font-extrabold text-gray-800 mb-8 border-b pb-4">
         {isEditing ? "Edit Purchase Record" : "Add New Purchase"}
       </h3>
       
-      <div className="mb-6">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Supplier</label>
-        <select required value={invoiceData.supplier} onChange={(e) => setInvoiceData({supplier: e.target.value})} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+      <div className="mb-8">
+        <label className="block text-sm font-bold text-gray-700 mb-3">Select Supplier</label>
+        <select required value={invoiceData.supplier} onChange={(e) => setInvoiceData({supplier: e.target.value})} className="w-full p-4 border border-gray-200 rounded-xl bg-gray-50 focus:ring-4 focus:ring-blue-50 outline-none transition duration-200">
           <option value="">-- Choose Supplier --</option>
           {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
         </select>
@@ -80,41 +78,43 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
 
       <div className="space-y-4">
         {items.map((item, idx) => (
-          <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Product</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Product</label>
               <select required value={item.product} onChange={(e) => {
                 const newItems = [...items]; newItems[idx].product = e.target.value; setItems(newItems);
-              }} className="w-full p-2 border rounded-lg outline-none">
+              }} className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400">
                 <option value="">Select Product</option>
                 {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Qty</label>
-              <input type="number" className="w-full p-2 border rounded-lg outline-none" value={item.quantity} onChange={(e) => {
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Qty</label>
+              <input type="number" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400" value={item.quantity} onChange={(e) => {
                 const newItems = [...items]; newItems[idx].quantity = Number(e.target.value); setItems(newItems);
               }} />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Price</label>
-              <input type="number" className="w-full p-2 border rounded-lg outline-none" value={item.buyingPrice} onChange={(e) => {
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price</label>
+              <input type="number" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400" value={item.buyingPrice} onChange={(e) => {
                 const newItems = [...items]; newItems[idx].buyingPrice = Number(e.target.value); setItems(newItems);
               }} />
             </div>
-            <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 hover:text-red-700 font-bold p-2 transition">Remove</button>
+            <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 hover:bg-red-50 font-bold p-3 rounded-lg transition duration-200">Remove</button>
           </div>
         ))}
       </div>
 
-      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-4 text-blue-600 font-bold hover:underline">+ Add Another Product</button>
+      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-6 flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
+        <span className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-lg">+</span> Add Another Product
+      </button>
       
-      <div className="mt-8 flex gap-4">
+      <div className="mt-10 flex gap-4">
         {isEditing && (
-          <button type="button" onClick={() => { setIsEditing(false); resetForm(); }} className="flex-1 bg-gray-200 py-3 rounded-lg font-bold hover:bg-gray-300 transition">Cancel</button>
+          <button type="button" onClick={() => { setIsEditing(false); resetForm(); }} className="px-8 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
         )}
-        <button type="submit" className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md">
-          {isEditing ? "Update Record" : "Save Purchase"}
+        <button type="submit" className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+          {isEditing ? "Update Purchase Record" : "Save Purchase Record"}
         </button>
       </div>
     </form>
