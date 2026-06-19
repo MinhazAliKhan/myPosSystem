@@ -19,23 +19,26 @@ const app = express();
 const isProduction = process.env.NODE_ENV === "production";
 const PORT = process.env.PORT || 5000;
 
-// CORS কনফিগারেশন: লোকাল এবং প্রোডাকশন উভয় URL সাপোর্ট করবে
-const allowedOrigins = [
-  'http://localhost:5173', 
-  process.env.CLIENT_URL 
-].filter(Boolean); 
-
-const corsOptions = {
-  origin: allowedOrigins,
-  credentials: true,
-};
-
 // ----------------------
 // Middlewares
 // ----------------------
-app.set('trust proxy', 1); // Render-এর প্রক্সি সার্ভারের জন্য বাধ্যতামূলক
-app.disable("x-powered-by");
+// Render-এর প্রক্সি সার্ভারের জন্য trust proxy 1 থাকা বাধ্যতামূলক
+app.set('trust proxy', 1); 
+
+// CORS কনফিগারেশন: ডাইনামিক এবং নিরাপদ
+const corsOptions = {
+  origin: [
+    'https://mcdposfrontend.onrender.com', 
+    'http://localhost:5173'
+  ],
+  credentials: true, // কুকি পাঠানোর জন্য এটি ম্যান্ডেটরি
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200
+};
+
 app.use(cors(corsOptions));
+app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
