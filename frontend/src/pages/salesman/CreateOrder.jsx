@@ -101,24 +101,18 @@ const CreateOrder = () => {
         </div>
       )}
 
-      <header className="h-16 bg-white px-4 md:px-8 flex justify-between items-center border-b border-slate-200 shrink-0">
+      <header className="h-16 bg-white px-6 flex justify-between items-center border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-3 text-indigo-600 font-black tracking-widest uppercase text-xs">
-          <FaCashRegister /> <span className="hidden md:inline">{status.shift ? "SHIFT ACTIVE" : "SHIFT CLOSED"}</span>
+          <FaCashRegister /> {status.shift ? "SHIFT ACTIVE" : "SHIFT CLOSED"}
         </div>
-        <div className="flex items-center gap-4 md:gap-6">
-          <div className="flex items-center gap-2 md:gap-3 bg-slate-50 px-3 md:px-4 py-2 rounded-full border border-slate-200">
-            <FaUserCircle className="text-indigo-500" size={20} />
-            <div className="text-right hidden md:block">
-              <p className="text-[10px] font-black uppercase text-slate-800">{user?.userName || "User"}</p>
-              <p className="text-[8px] font-bold uppercase text-indigo-500">{user?.role || "Staff"}</p>
-            </div>
-          </div>
+        <div className="flex items-center gap-4">
           <button onClick={() => { logout(); navigate("/login"); }} className="text-rose-500 hover:text-rose-600"><FaPowerOff size={16} /></button>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-3 md:p-6 gap-4 md:gap-6">
-        {/* Product Section */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden p-4 gap-4">
+        {/* Left Side: Products */}
         <div className="flex-1 flex flex-col gap-4 overflow-hidden">
           <div className="relative shrink-0">
             <FaSearch className="absolute left-4 top-4 text-slate-400" />
@@ -126,63 +120,57 @@ const CreateOrder = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-3 shrink-0">
-            <button onClick={() => navigate("/salesman/manage")} className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 md:p-5 rounded-2xl shadow-lg flex flex-col items-center gap-1 md:gap-2">
-              <FaCog size={20} /> <span className="font-black uppercase text-[9px]">Manage</span>
-            </button>
-            <button onClick={() => navigate("/salesman/void")} className="bg-gradient-to-r from-rose-500 to-orange-500 text-white p-3 md:p-5 rounded-2xl shadow-lg flex flex-col items-center gap-1 md:gap-2">
-              <FaBan size={20} /> <span className="font-black uppercase text-[9px]">Void</span>
-            </button>
-            <button onClick={() => navigate("/salesman/refund")} className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-3 md:p-5 rounded-2xl shadow-lg flex flex-col items-center gap-1 md:gap-2">
-              <FaUndo size={20} /> <span className="font-black uppercase text-[9px]">Refund</span>
-            </button>
-          </div>
-          
-          <div className="flex gap-2 overflow-x-auto pb-2 shrink-0">
-            {categories.map((cat, index) => (
-              <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? "bg-indigo-600 text-white shadow-lg" : "bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50"}`}>
-                {cat}
+            {["Manage", "Void", "Refund"].map((label, i) => (
+              <button key={label} onClick={() => navigate(`/salesman/${label.toLowerCase()}`)} className="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex flex-col items-center gap-1 hover:bg-slate-50">
+                {i === 0 ? <FaCog/> : i === 1 ? <FaBan/> : <FaUndo/>}
+                <span className="font-black uppercase text-[9px]">{label}</span>
               </button>
             ))}
           </div>
-
-          <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 content-start">
+          
+          <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 content-start">
             {filteredProducts.map((p) => (
-              <button key={p._id} onClick={() => addToCart(p)} className="bg-white border-b-4 border-indigo-200 hover:border-indigo-500 p-3 md:p-4 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-1 md:gap-2 h-24 md:h-28">
-                <span className="text-[10px] md:text-[11px] font-bold text-slate-700 text-center uppercase">{p.name}</span>
-                <span className="text-[8px] font-bold text-slate-400 uppercase">Stock: {p.stock}</span>
-                <span className="text-[9px] md:text-[10px] font-black text-white bg-indigo-500 px-2 py-0.5 rounded-full">${p.price}</span>
+              <button key={p._id} onClick={() => addToCart(p)} className="bg-white border-b-4 border-indigo-200 p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-1 h-24">
+                <span className="text-[10px] font-bold text-slate-700 text-center uppercase">{p.name}</span>
+                <span className="text-[10px] font-black text-indigo-600">${p.price}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Sidebar Order Section */}
-        <aside className="w-full lg:w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-[40vh] lg:h-full shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-slate-100 font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
+        {/* Right Side: Cart Section (Optimized for iPad/Small Screen) */}
+        <aside className="w-72 lg:w-80 bg-white border border-slate-200 rounded-3xl flex flex-col h-full shadow-lg overflow-hidden">
+          <div className="p-4 border-b font-black text-slate-400 uppercase text-[10px] shrink-0">Current Order</div>
+          
+          {/* Cart Items List - Enabled scrolling for iPad */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {cart.map((item, i) => (
-              <div key={i} className="flex justify-between items-center bg-slate-50 p-2 md:p-3 rounded-2xl border border-slate-100">
-                <p className="text-[10px] md:text-[11px] font-bold text-slate-800">{item.name} <span className="text-indigo-500 font-black">x{item.quantity}</span></p>
-                <div className="flex items-center gap-2">
-                   <span className="text-[10px] md:text-[11px] font-black text-slate-700">${(item.price * item.quantity).toFixed(2)}</span>
-                   <button onClick={() => removeFromCart(item.productId)} className="text-rose-400 hover:text-rose-600"><FaTrash size={12} /></button>
+              <div key={i} className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <p className="text-[11px] font-bold truncate pr-2">{item.name} <span className="text-indigo-500 font-black">x{item.quantity}</span></p>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                   <span className="text-[11px] font-black">${(item.price * item.quantity).toFixed(2)}</span>
+                   <button onClick={() => removeFromCart(item.productId)} className="text-rose-400"><FaTrash size={10} /></button>
                 </div>
               </div>
             ))}
           </div>
           
-          <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
-            <div className="flex justify-between items-center mb-2">
+          {/* Controls */}
+          <div className="p-4 border-t bg-slate-50 shrink-0">
+            <div className="flex justify-between items-center mb-3">
               <span className="text-[10px] font-black text-slate-400 uppercase">Total</span>
               <span className="text-sm font-black text-slate-800">${totalAmount.toFixed(2)}</span>
             </div>
-            <div className="grid grid-cols-3 gap-1 md:gap-2 mb-2">
+            
+            {/* Reduced size NumPad for better fit */}
+            <div className="grid grid-cols-3 gap-1 mb-3">
               {[1,2,3,4,5,6,7,8,9,".",0].map(n => (
-                <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border border-slate-200 p-2 md:p-3 rounded-lg font-black text-slate-700 hover:bg-indigo-50">{n}</button>
+                <button key={n} onClick={() => handleNumPad(n.toString())} className="bg-white border p-2 rounded-lg text-sm font-black">{n}</button>
               ))}
-              <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 p-2 md:p-3 rounded-lg flex justify-center items-center"><FaBackspace/></button>
+              <button onClick={handleBackspace} className="bg-rose-50 text-rose-600 p-2 rounded-lg flex justify-center items-center"><FaBackspace/></button>
             </div>
-            <button onClick={handlePay} disabled={!status.shift || cart.length === 0 || parseFloat(receivedAmount || 0) < totalAmount} className={`w-full py-3 md:py-4 rounded-2xl font-black text-xs uppercase ${!status.shift || parseFloat(receivedAmount || 0) < totalAmount ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"}`}>Pay</button>
+            
+            <button onClick={handlePay} disabled={!status.shift || cart.length === 0} className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-xs uppercase">Pay Now</button>
           </div>
         </aside>
       </div>
