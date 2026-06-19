@@ -48,7 +48,6 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
     }
 
     try {
-      // ডেটা সাবমিট করার সময় সঠিক ফরম্যাটে কনভার্ট করা
       const processedItems = items.map(item => ({
         ...item,
         quantity: Number(item.quantity),
@@ -90,20 +89,20 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Product</label>
               <select required value={item.product} onChange={(e) => {
                 const newItems = [...items]; newItems[idx].product = e.target.value; setItems(newItems);
-              }} className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400">
+              }} className={`w-full p-3 border rounded-lg outline-none ${!item.product ? "border-red-500" : "border-gray-200"}`}>
                 <option value="">Select Product</option>
                 {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Qty</label>
-              <input type="number" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400" value={item.quantity} onChange={(e) => {
+              <input type="number" className={`w-full p-3 border rounded-lg outline-none ${(!item.quantity || Number(item.quantity) <= 0) ? "border-red-500" : "border-gray-200"}`} value={item.quantity} onChange={(e) => {
                 const newItems = [...items]; newItems[idx].quantity = e.target.value; setItems(newItems);
               }} />
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price</label>
-              <input type="number" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400" value={item.buyingPrice} onChange={(e) => {
+              <input type="number" className={`w-full p-3 border rounded-lg outline-none ${(!item.buyingPrice || Number(item.buyingPrice) <= 0) ? "border-red-500" : "border-gray-200"}`} value={item.buyingPrice} onChange={(e) => {
                 const newItems = [...items]; newItems[idx].buyingPrice = e.target.value; setItems(newItems);
               }} />
             </div>
