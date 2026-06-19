@@ -5,8 +5,8 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: true, 
-  sameSite: 'none',
+  secure: false, // লোকালহোস্টের জন্য এটি false থাকা জরুরি
+  sameSite: 'lax', // লোকাল এবং প্রোডাকশনের জন্য এটি বেশি স্টেবল
   path: "/",
 };
 
