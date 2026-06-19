@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [invoiceData, setInvoiceData] = useState({ supplier: "" });
   const [items, setItems] = useState([{ product: "", quantity: "", buyingPrice: "" }]);
 
@@ -39,6 +40,7 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     if (!invoiceData.supplier) return toast.error("Please select a supplier.");
     for (const item of items) {
@@ -47,6 +49,7 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
       if (!item.buyingPrice || Number(item.buyingPrice) <= 0) return toast.error("Price must be greater than 0.");
     }
 
+    setIsSubmitting(true);
     try {
       const processedItems = items.map(item => ({
         ...item,
@@ -63,8 +66,11 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
       setIsEditing(false);
       resetForm();
     } catch (err) { 
-      const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to save. Check your inputs.";
+      console.error("Submit Error:", err);
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to save.";
       toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -119,8 +125,8 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
         {isEditing && (
           <button type="button" onClick={() => { setIsEditing(false); resetForm(); }} className="px-8 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
         )}
-        <button type="submit" className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">
-          {isEditing ? "Update Purchase Record" : "Save Purchase Record"}
+        <button type="submit" disabled={isSubmitting} className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50">
+          {isSubmitting ? "Saving..." : (isEditing ? "Update Purchase Record" : "Save Purchase Record")}
         </button>
       </div>
     </form>

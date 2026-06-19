@@ -29,7 +29,10 @@ const PurchasePage = () => {
       setPurchases(res.data.data || []);
       setTotal(res.data.total || 0);
       setSuppliers(sRes.data.suppliers || []);
-    } catch (err) { toast.error("Error loading data"); }
+    } catch (err) { 
+      console.error("Purchase Load Error:", err);
+      toast.error("Error loading data"); 
+    }
     finally { setLoading(false); }
   };
 
@@ -46,7 +49,10 @@ const PurchasePage = () => {
         await purchaseApi.deletePurchase(id);
         toast.success("Deleted successfully!");
         refreshPurchases();
-      } catch (err) { toast.error("Delete failed"); }
+      } catch (err) { 
+        console.error("Delete Error:", err);
+        toast.error("Delete failed"); 
+      }
     }
   };
 
