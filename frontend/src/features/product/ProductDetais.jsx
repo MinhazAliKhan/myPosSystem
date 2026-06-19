@@ -28,7 +28,7 @@ const ProductDetails = () => {
   if (!product) return <div className="p-10 text-center text-red-500 font-bold">Product not found!</div>;
 
   return (
-    <div className="p-6 md:p-12 bg-gray-100 min-h-screen">
+    <div className="p-4 md:p-12 bg-gray-100 min-h-screen">
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -38,14 +38,16 @@ const ProductDetails = () => {
         }
       `}</style>
 
+      {/* কার্ডটি মোবাইলে যেন পুরো জায়গা নেয় এবং স্ক্রিনে ফিট হয় */}
       <div className="printable-card max-w-3xl mx-auto bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-gray-900 px-8 py-6 text-white flex justify-between items-center">
+        <div className="bg-gray-900 px-6 md:px-8 py-6 text-white flex justify-between items-center">
           <h1 className="text-lg font-medium tracking-wide uppercase">Product Information</h1>
           <span className="text-gray-400 text-sm">#{product.sku}</span>
         </div>
 
-        <div className="px-8 py-8 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
+        <div className="px-6 md:px-8 py-8 space-y-6">
+          {/* রেসপন্সিভ গ্রিড: মোবাইল হলে ১ কলাম, বড় হলে ২ কলাম */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Name</p>
               <p className="text-gray-900 font-semibold mt-1">{product.name}</p>
@@ -58,7 +60,7 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 border-t border-gray-100 pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-6">
             <div>
               <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Price</p>
               <p className="text-gray-900 font-medium mt-1 text-lg">$ {product.price}</p>
@@ -69,7 +71,8 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 border-t border-gray-100 pt-6">
+          {/* স্টক পার্টটি মোবাইলে নিচে নেমে যাবে */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-gray-100 pt-6">
             <div>
               <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Category</p>
               <p className="text-gray-700 text-sm mt-1">{product.category?.name || "N/A"}</p>

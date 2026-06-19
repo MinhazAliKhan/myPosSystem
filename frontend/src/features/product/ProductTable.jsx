@@ -7,8 +7,9 @@ const ProductTable = ({ products, onEdit, onDelete, userRole }) => {
 
   return (
     <div className="bg-white shadow rounded overflow-hidden">
-      <div className="overflow-x-auto"> {/* ছোট স্ক্রিনের জন্য স্ক্রলিং সুবিধা */}
-        <table className="w-full text-left border-collapse">
+      {/* মোবাইল রেসপন্সিভ করার জন্য নিচে overflow-x-auto এবং min-w-[800px] ব্যবহার করা হয়েছে */}
+      <div className="overflow-x-auto"> 
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead className="bg-gray-100 border-b text-gray-700 uppercase text-xs">
             <tr>
               <th className="p-3">Product Info</th>
@@ -37,12 +38,12 @@ const ProductTable = ({ products, onEdit, onDelete, userRole }) => {
 
                 {/* Cost Price */}
                 <td className="p-3">
-                  <span className="text-sm text-gray-600 font-semibold">${p.costPrice.toFixed(2)} </span>
+                  <span className="text-sm text-gray-600 font-semibold">${p.costPrice ? p.costPrice.toFixed(2) : "0.00"}</span>
                 </td>
 
                 {/* Selling Price */}
                 <td className="p-3">
-                  <span className="text-sm text-blue-600 font-bold">${p.price.toFixed(2)}</span>
+                  <span className="text-sm text-blue-600 font-bold">${p.price ? p.price.toFixed(2) : "0.00"}</span>
                 </td>
 
                 {/* Stock with Unit */}
