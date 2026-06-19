@@ -5,10 +5,10 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // প্রোডাকশনে true, লোকালহস্টে false
-  sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // লোকালহোস্টের জন্য 'lax' মাস্ট
+  secure: process.env.NODE_ENV === "production", 
+  sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
   path: "/",
-}
+};
 
 const createAccessToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.ACCESS_SECRET, { expiresIn: process.env.ACCESS_EXPIRE || "15m" });
