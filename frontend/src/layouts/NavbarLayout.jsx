@@ -40,7 +40,7 @@ const Navbar = () => {
               M
             </div>
             <div className="leading-tight">
-              <span className="block text-lg font-black text-gray-900 tracking-tighter">MY<span className="text-red-600">APP</span></span>
+              <span className="block text-lg font-black text-gray-900 tracking-tighter">MAK<span className="text-red-600">POSAPP</span></span>
               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">POS System</span>
             </div>
           </Link>
