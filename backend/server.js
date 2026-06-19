@@ -33,8 +33,11 @@ const allowedOrigin = process.env.NODE_ENV === "production"
 app.use(cors({
   origin: allowedOrigin,
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+  // 'OPTIONS' মেথডটি হ্যান্ডেল করার জন্য এটি গুরুত্বপূর্ণ
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());

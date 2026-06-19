@@ -6,10 +6,10 @@ const ProductTable = ({ products, onEdit, onDelete, userRole }) => {
   if (products.length === 0) return <p className="text-center py-4 bg-white rounded shadow">No products found.</p>;
 
   return (
-    <div className="bg-white shadow rounded overflow-hidden">
-      {/* মোবাইল রেসপন্সিভ করার জন্য নিচে overflow-x-auto এবং min-w-[800px] ব্যবহার করা হয়েছে */}
-      <div className="overflow-x-auto"> 
-        <table className="w-full text-left border-collapse min-w-[800px]">
+    <div className="bg-white shadow rounded overflow-hidden w-full">
+      {/* overflow-x-auto এবং w-full এর কারণে এটি এখন সব ডিভাইসে স্ক্রলযোগ্য হবে */}
+      <div className="overflow-x-auto w-full"> 
+        <table className="w-full text-left border-collapse min-w-full">
           <thead className="bg-gray-100 border-b text-gray-700 uppercase text-xs">
             <tr>
               <th className="p-3">Product Info</th>
