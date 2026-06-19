@@ -5,8 +5,10 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", 
-  sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+  // আইফোনের সাফারির জন্য প্রোডাকশনে secure অবশ্যই true হতে হবে
+  secure: true, 
+  // ক্রস-ডোমেইন কুকি সাফারিতে কাজ করার জন্য sameSite অবশ্যই 'none' হতে হবে
+  sameSite: 'none', 
   path: "/",
 };
 

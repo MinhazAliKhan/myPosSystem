@@ -26,7 +26,10 @@ const corsOrigin = isProduction ? process.env.CLIENT_URL : 'http://localhost:517
 // ----------------------
 app.set('trust proxy', 1);
 app.disable("x-powered-by");
-app.use(cors({ origin: corsOrigin, credentials: true }));
+app.use(cors({ origin: "https://mcdposfrontend.onrender.com",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"] }));
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
