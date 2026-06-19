@@ -1,35 +1,33 @@
 import axios from "axios";
 
-// আপনার ব্যাকএন্ডের সঠিক URL
 const BASE_URL = "https://mcdpos.onrender.com/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // এটি কুকি পাঠানোর জন্য বাধ্যতামূলক
+  withCredentials: true, // কুকি পাঠানোর জন্য এটি ম্যান্ডেটরি
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
+// ইন্টারসেপ্টর লজিক
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // যদি ৪০১ এরর হয় এবং এটি রিফ্রেশ টোকেন রিকোয়েস্ট না হয়
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.url.includes("/auth/refresh")
-    ) {
+    // ৪০১ এরর হলে রিফ্রেশ টোকেন কল করবে
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // এখানে সরাসরি 'api.get' ব্যবহার করা হয়েছে, যা উপরের কনফিগারেশন অনুসরণ করবে
-        await api.get("/auth/refresh"); 
-
-        // রিফ্রেশ সফল হলে অরিজিনাল রিকোয়েস্টটি আবার চেষ্টা করবে
+        // নতুন এক্সেস টোকেন পাওয়ার চেষ্টা করবে
+        await api.get("/auth/refresh");
+        // সফল হলে আগের রিকোয়েস্টটি আবার পাঠাবে
         return api(originalRequest);
       } catch (refreshError) {
-        console.error("Refresh token expired or invalid");
-        // রিফ্রেশ ব্যর্থ হলে ইউজারকে লগইন পেজে পাঠানোর জন্য এটি রিজেক্ট করা হচ্ছে
+        // রিফ্রেশও ফেইল করলে ইউজারকে আউট করে দেবে
+        window.location.href = "/login"; // সরাসরি রিডাইরেক্ট করা সেফ
         return Promise.reject(refreshError);
       }
     }
@@ -37,4 +35,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;
