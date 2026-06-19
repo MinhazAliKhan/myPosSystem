@@ -8,7 +8,7 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
   const [invoiceData, setInvoiceData] = useState({ supplier: "" });
-  const [items, setItems] = useState([{ product: "", quantity: 0, buyingPrice: 0 }]);
+  const [items, setItems] = useState([{ product: "", quantity: "", buyingPrice: "" }]);
 
   useEffect(() => {
     const load = async () => {
@@ -34,7 +34,7 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
 
   const resetForm = () => {
     setInvoiceData({ supplier: "" });
-    setItems([{ product: "", quantity: 0, buyingPrice: 0 }]);
+    setItems([{ product: "", quantity: "", buyingPrice: "" }]);
   };
 
   const handleSubmit = async (e) => {
@@ -43,12 +43,19 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
     if (!invoiceData.supplier) return toast.error("Please select a supplier.");
     for (const item of items) {
       if (!item.product) return toast.error("Please select a product for all items.");
-      if (item.quantity <= 0) return toast.error("Quantity must be greater than 0.");
-      if (item.buyingPrice <= 0) return toast.error("Price must be greater than 0.");
+      if (!item.quantity || Number(item.quantity) <= 0) return toast.error("Quantity must be greater than 0.");
+      if (!item.buyingPrice || Number(item.buyingPrice) <= 0) return toast.error("Price must be greater than 0.");
     }
 
     try {
-      const payload = { ...invoiceData, items: items };
+      // ডেটা সাবমিট করার সময় সঠিক ফরম্যাটে কনভার্ট করা
+      const processedItems = items.map(item => ({
+        ...item,
+        quantity: Number(item.quantity),
+        buyingPrice: Number(item.buyingPrice)
+      }));
+
+      const payload = { ...invoiceData, items: processedItems };
       if (isEditing) await purchaseApi.updatePurchase(initialData._id, payload);
       else await purchaseApi.createPurchase(payload);
       
@@ -91,13 +98,13 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Qty</label>
               <input type="number" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400" value={item.quantity} onChange={(e) => {
-                const newItems = [...items]; newItems[idx].quantity = Number(e.target.value); setItems(newItems);
+                const newItems = [...items]; newItems[idx].quantity = e.target.value; setItems(newItems);
               }} />
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price</label>
               <input type="number" className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-400" value={item.buyingPrice} onChange={(e) => {
-                const newItems = [...items]; newItems[idx].buyingPrice = Number(e.target.value); setItems(newItems);
+                const newItems = [...items]; newItems[idx].buyingPrice = e.target.value; setItems(newItems);
               }} />
             </div>
             <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-red-500 hover:bg-red-50 font-bold p-3 rounded-lg transition duration-200">Remove</button>
@@ -105,7 +112,7 @@ const PurchaseForm = ({ onSave, initialData, isEditing, setIsEditing }) => {
         ))}
       </div>
 
-      <button type="button" onClick={() => setItems([...items, { product: "", quantity: 0, buyingPrice: 0 }])} className="mt-6 flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
+      <button type="button" onClick={() => setItems([...items, { product: "", quantity: "", buyingPrice: "" }])} className="mt-6 flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
         <span className="bg-blue-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-lg">+</span> Add Another Product
       </button>
       
