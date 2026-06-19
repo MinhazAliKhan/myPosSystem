@@ -8,11 +8,10 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: isProd,           // প্রোডাকশনে HTTPS এর জন্য true
-  sameSite: isProd ? "none" : "lax", // ক্রস-ডোমেইন কুকির জন্য 'none'
+  secure: true,        // মোবাইলের জন্য এটি অবশ্যই true হতে হবে
+  sameSite: 'none',    // ক্রস-ডোমেইন কুকির জন্য এটি বাধ্যতামূলক
   path: "/",
-  // যদি কোনো সাবডোমেইন ইস্যু হয়, তবেই domain টি আনকমেন্ট করবেন:
-  // domain: isProd ? ".onrender.com" : undefined 
+  domain: ".onrender.com" // এটি যোগ করুন, এটি মোবাইলে ডোমেইন ট্র্যাকিং সহজ করে
 };
 
 // ==============================
