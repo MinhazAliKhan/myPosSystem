@@ -126,12 +126,21 @@ const CreateOrder = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 content-start pb-4">
-            {filteredProducts.map((p) => (
-              <button key={p._id} onClick={() => addToCart(p)} className="bg-white border-b-4 border-indigo-200 p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-1 h-24 lg:h-32">
-                <span className="text-[10px] lg:text-xs font-bold text-slate-700 text-center uppercase truncate w-full">{p.name}</span>
-                <span className="text-[10px] lg:text-sm font-black text-white bg-indigo-500 px-3 py-1 rounded-full">${p.price}</span>
-              </button>
-            ))}
+            {filteredProducts.map((p) => {
+              const cartItem = cart.find(item => item.productId === p._id);
+              return (
+                <button key={p._id} onClick={() => addToCart(p)} className="relative bg-white border-b-4 border-indigo-200 p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-1 h-24 lg:h-32">
+                  {cartItem && (
+                    <span className="absolute top-2 right-2 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">
+                      {cartItem.quantity}
+                    </span>
+                  )}
+                  <span className="text-[10px] lg:text-xs font-bold text-slate-700 text-center uppercase truncate w-full">{p.name}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase">Stock: {p.stock}</span>
+                  <span className="text-[10px] lg:text-sm font-black text-white bg-indigo-500 px-3 py-1 rounded-full">${p.price}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
