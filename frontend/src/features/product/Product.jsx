@@ -1,145 +1,120 @@
 import React, { useState, useEffect } from "react";
-import productApi from "../../api/product.service";
-import ProductForm from "./ProductForm";
-import ProductTable from "./ProductTable";
-import { useAuth } from "../../store/AuthContext";
+import saleApi from "../../api/sale.service";
 import { toast } from "react-hot-toast";
 
-const Product = () => {
-  const { user } = useAuth();
-  const [products, setProducts] = useState([]);
+const SalesHistory = () => {
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-
-  // ফিল্টার ও সর্টিং স্টেট
+  
+  // ফিল্টার ও প্যাগিনেশন স্টেট
   const [searchTerm, setSearchTerm] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState("desc");
-  const [status, setStatus] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const limit = 4;
+  const [totalSales, setTotalSales] = useState(0);
+  const limit = 10;
 
   useEffect(() => {
-    fetchProducts();
-  }, [currentPage, searchTerm, minPrice, maxPrice, sortBy, sortOrder,status]);
+    fetchSales();
+  }, [currentPage, searchTerm]);
 
-  const fetchProducts = async () => {
+  const fetchSales = async () => {
     try {
       setLoading(true);
-      let booleanStatus = undefined;
-      if (status === "true") booleanStatus = true;
-      if (status === "false") booleanStatus = false;
-      
       const params = { 
         page: currentPage, 
         limit, 
-        search: searchTerm,
-        minPrice: minPrice || undefined, // ফিক্সড: খালি থাকলে যেন এরর না হয়
-        maxPrice: maxPrice || undefined, // ফিক্সড: খালি থাকলে যেন এরর না হয়
-        isActive: booleanStatus,
-        sortBy,
-        sortOrder
+        search: searchTerm 
       };
-      const response = await productApi.getAllProducts(params);
-      setProducts(response.data.data);
-      setTotalProducts(response.data.meta.total);
+      const response = await saleApi.getSales(params);
+      // রেসপন্স স্ট্রাকচার অনুযায়ী ডাটা সেট করা
+      setSales(response.data.data || []);
+      setTotalSales(response.data.total || 0);
     } catch (err) {
-      toast.error("Failed to load products");
+      toast.error("Failed to load sales history");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = async (data) => {
+  const handleVoid = async (id) => {
+    const reason = window.prompt("Enter reason for voiding this sale:");
+    if (!reason) return;
     try {
-      await productApi.createProduct(data);
-      toast.success("Product created!");
-      fetchProducts();
-    } catch (err) { 
-      toast.error(err.response?.data?.message || "Create failed"); 
-    }
-  };
-
-  const handleUpdate = async (id, data) => {
-    try {
-      await productApi.updateProduct(id, data);
-      toast.success("Product updated!");
-      setEditingProduct(null);
-      fetchProducts();
-    } catch (err) { 
-      toast.error("Update failed"); 
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
-    try {
-      await productApi.deleteProduct(id);
-      toast.success("Product deleted!");
-      fetchProducts();
-    } catch (err) { 
-      toast.error("Delete failed"); 
+      await saleApi.voidSale(id, { reason });
+      toast.success("Sale voided successfully");
+      fetchSales();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Action failed");
     }
   };
 
   return (
     <div className="p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold mb-6">Total Number of Products ({totalProducts})</h2>
+      <h2 className="text-xl md:text-2xl font-bold mb-6">Sales History ({totalSales})</h2>
 
-      {/* ফিল্টার, সার্চ ও সর্টিং বার - রেসপন্সিভ করা হয়েছে */}
-      <div className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-center">
-        <input type="text" placeholder="Search..." className="p-2 border rounded outline-none focus:ring-2 w-full" value={searchTerm} onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}} />
-        <input type="number" placeholder="Min Price" className="p-2 border rounded outline-none focus:ring-2 w-full" value={minPrice} onChange={(e) => {setMinPrice(e.target.value);setCurrentPage(1);}} />
-        <input type="number" placeholder="Max Price" className="p-2 border rounded outline-none focus:ring-2 w-full" value={maxPrice} onChange={(e) => {setMaxPrice(e.target.value);setCurrentPage(1);}} />
-        
-        <select className="p-2 border rounded outline-none focus:ring-2 w-full" value={sortBy} onChange={(e) => {setSortBy(e.target.value); setCurrentPage(1);}}>
-          <option value="createdAt">Sort: Date</option>
-          <option value="name">Sort: Name</option>
-          <option value="price">Sort: Price</option>
-        </select>
-        
-        <select className="p-2 border rounded outline-none focus:ring-2 w-full" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
-          <option value="desc">Descending</option>
-          <option value="asc">Ascending</option>
-        </select>
-        <select
-            value={status}
-            onChange={(e) => {
-                setStatus(e.target.value);
-                setCurrentPage(1);
-            }}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-        >
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-        </select>
+      {/* সার্চ ও ফিল্টার বার */}
+      <div className="bg-white p-4 rounded shadow mb-6 flex items-center gap-3">
+        <input 
+          type="text" 
+          placeholder="Search by Invoice ID or Product..." 
+          className="p-2 border rounded outline-none w-full md:w-1/3" 
+          value={searchTerm} 
+          onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}} 
+        />
       </div>
 
-      <ProductForm 
-        onCreate={handleCreate} 
-        onUpdate={handleUpdate} 
-        editingProduct={editingProduct} 
-        clearEdit={() => setEditingProduct(null)} 
-      />
-
       {loading ? (
-        <p className="text-center py-10">Loading Products...</p>
+        <p className="text-center py-10">Loading Sales...</p>
       ) : (
         <>
-          {/* টেবিল রেসপন্সিভ করতে ProductTable এর কোডে নিচের <div className="overflow-x-auto"> যোগ করবেন */}
-          <div className="overflow-x-auto">
-             <ProductTable products={products} onEdit={setEditingProduct} onDelete={handleDelete} userRole={user?.role} />
+          <div className="overflow-x-auto bg-white rounded shadow">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="p-4">Invoice ID</th>
+                  <th className="p-4">Amount</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sales.map((sale) => (
+                  <tr key={sale._id} className="border-b hover:bg-gray-50">
+                    <td className="p-4">{sale.invoiceId}</td>
+                    <td className="p-4">${sale.totalAmount?.toFixed(2)}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-xs ${sale.status === 'voided' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                        {sale.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      {sale.status !== 'voided' && (
+                        <button 
+                          onClick={() => handleVoid(sale._id)} 
+                          className="text-red-500 hover:text-red-700 text-sm font-bold"
+                        >
+                          Void
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          
+
+          {/* প্যাগিনেশন */}
           <div className="flex justify-center mt-6 gap-4 items-center">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-4 py-1 border rounded disabled:opacity-50">Prev</button>
-            <span className="text-sm font-medium">Page {currentPage} of {Math.ceil(totalProducts / limit) || 1}</span>
-            <button disabled={currentPage >= Math.ceil(totalProducts / limit)} onClick={() => setCurrentPage(p => p + 1)} className="px-4 py-1 border rounded disabled:opacity-50">Next</button>
+            <button 
+              disabled={currentPage === 1} 
+              onClick={() => setCurrentPage(p => p - 1)} 
+              className="px-4 py-1 border rounded disabled:opacity-50"
+            >Prev</button>
+            <span className="text-sm font-medium">Page {currentPage} of {Math.ceil(totalSales / limit) || 1}</span>
+            <button 
+              disabled={currentPage >= Math.ceil(totalSales / limit)} 
+              onClick={() => setCurrentPage(p => p + 1)} 
+              className="px-4 py-1 border rounded disabled:opacity-50"
+            >Next</button>
           </div>
         </>
       )}
@@ -147,4 +122,4 @@ const Product = () => {
   );
 };
 
-export default Product;
+export default SalesHistory;

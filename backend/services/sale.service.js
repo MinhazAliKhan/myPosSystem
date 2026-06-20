@@ -52,15 +52,34 @@ exports.voidSale = async (saleId, userId, reason) => {
   try {
     const sale = await Sale.findById(saleId).session(session);
     if (!sale || sale.status === "voided") throw new Error("Sale not found or already voided");
-    for (const item of sale.items) { await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.quantity } }, { session }); }
-    await DrawerSession.findByIdAndUpdate(sale.drawerSession, { $inc: { drawerSales: -sale.totalAmount } }, { session });
-    sale.status = "voided"; sale.voidedBy = userId; sale.voidedAt = new Date(); sale.voidReason = reason;
+    
+    // Restore product stock
+    for (const item of sale.items) { 
+      await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.quantity } }, { session }); 
+    }
+    
+    // Deduct from Drawer Session (Safety check added)
+    if (sale.drawerSession) {
+      await DrawerSession.findByIdAndUpdate(sale.drawerSession, { 
+        $inc: { drawerSales: -sale.totalAmount } 
+      }, { session });
+    }
+    
+    sale.status = "voided"; 
+    sale.voidedBy = userId; 
+    sale.voidedAt = new Date(); 
+    sale.voidReason = reason;
+    
     await sale.save({ session });
     await session.commitTransaction();
     return sale;
-  } catch (err) { await session.abortTransaction(); throw err; } finally { session.endSession(); }
+  } catch (err) { 
+    await session.abortTransaction(); 
+    throw err; 
+  } finally { 
+    session.endSession(); 
+  }
 };
-
 exports.refundSale = async (saleId, userId, reason) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -97,15 +116,73 @@ exports.getTopSellingItems = async () => {
   ]);
 };
 
-exports.getSales = async (query) => {
-  const { page = 1, limit = 10, search } = query;
-  const filter = search ? { "items.name": { $regex: search, $options: "i" } } : {};
-  return await Sale.find(filter)
+exports.getSales = async (userId, query) => {
+  const { page = 1, limit = 10, search, startDate, endDate } = query;
+  
+  let match = {};
+
+  if (userId) {
+    match.createdBy = new mongoose.Types.ObjectId(userId);
+  }
+  
+  // সার্চ লজিক (এটি ঠিক আছে)
+  if (search) {
+    match.$or = [
+      { "items.name": { $regex: search, $options: "i" } },
+      { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: search, options: "i" } } }
+    ];
+  }
+  
+  // ডেট ফিল্টারিং (সংশোধিত)
+  if (startDate || endDate) {
+    match.createdAt = {};
+    
+    if (startDate) {
+      // স্ট্রিং থেকে সঠিক তারিখ অবজেক্ট তৈরি
+      const start = new Date(startDate);
+      start.setUTCHours(0, 0, 0, 0);
+      match.createdAt.$gte = start;
+    }
+    
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setUTCHours(23, 59, 59, 999);
+      match.createdAt.$lte = end;
+    } else if (startDate) {
+      // যদি শুধু startDate থাকে কিন্তু endDate না থাকে, 
+      // তবে ওই নির্দিষ্ট দিনের সব ডাটা দেখানোর জন্য endDate অটো সেট করা
+      const endOfDay = new Date(startDate);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      match.createdAt.$lte = endOfDay;
+    }
+  }
+
+  // ডাটা ফেচিং
+  const data = await Sale.find(match)
+    .populate("createdBy", "userName")
+    .populate("voidedBy", "userName")
     .sort({ createdAt: -1 })
     .skip((parseInt(page) - 1) * parseInt(limit))
     .limit(parseInt(limit));
+    
+  const total = await Sale.countDocuments(match);
+  
+  return { data, total, page: parseInt(page), limit: parseInt(limit) };
 };
+exports.getSaleById = async (id) => {
+  // ডাটাবেজ থেকে আইডি দিয়ে খুঁজে বের করা এবং প্রয়োজনীয় তথ্য পপুলেট করা
+  const sale = await Sale.findById(id)
+    .populate("createdBy", "userName")         // যিনি সেল করেছেন
+    .populate("voidedBy", "userName")          // যিনি ভয়েড করেছেন (যদি থাকে)
+    .populate("shift", "shiftName startTime")  // শিফটের তথ্য
+    .populate("drawerSession", "openingBalance"); // ড্রয়ার সেশনের তথ্য
 
+  if (!sale) {
+    throw new Error("Sale record not found");
+  }
+
+  return sale;
+};
 // কিচেন অর্ডারের জন্য প্রয়োজনীয় লজিক
 exports.getKitchenOrders = async () => {
   const activeShift = await Shift.findOne({ status: "open" });

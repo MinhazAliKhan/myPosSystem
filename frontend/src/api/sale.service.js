@@ -12,7 +12,7 @@ const saleApi = {
   
   // Route: GET /api/v1/sales
   getSales: (params) => api.get("/v1/sales", { params }),
-
+  getSaleById: (id) => api.get(`/v1/sales/${id}`),
   // Route: PATCH /api/v1/sales/:id/void
   voidSale: (id, reason) => api.patch(`/v1/sales/${id}/void`, { reason }),
 

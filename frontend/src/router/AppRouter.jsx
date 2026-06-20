@@ -42,6 +42,7 @@ import ProductDetails from "../features/product/ProductDetais";
 import DrawerReportAdmin from "../features/report/DrawerReport";
 import ShiftReport from "../features/report/ShiftReport";
 import DailySummery from "../features/report/DailySummery";
+import SaleDetails from './../pages/salesman/SaleDetails';
 
 const router = createBrowserRouter([
   {
@@ -93,6 +94,7 @@ const router = createBrowserRouter([
       { path: "open-drawer", element: <OpenDrawer /> },
       { path: "drawer/:id/close", element: <CloseDrawer /> },
       { path: "my-sales", element: <SalesHistory /> },
+      { path: "sales/:id", element: <SaleDetails /> },
       { path: "inventory", element: <CheckStock /> },
       { path: "drawer-report", element: <DrawerReport /> },
     ],

@@ -8,13 +8,24 @@ exports.getDrawerReport = async (userId, query) => {
   
   let match = userId ? { user: new mongoose.Types.ObjectId(userId) } : {};
   if (startDate || endDate) {
-    match.startTime = {};
-    if (startDate) match.startTime.$gte = new Date(startDate);
-    if (endDate) match.startTime.$lte = new Date(endDate);
+  match.startTime = {};
+  if (startDate) {
+    // তারিখটিকে সেই দিনের শুরুতে সেট করুন (UTC তে)
+    const start = new Date(startDate);
+    start.setUTCHours(0, 0, 0, 0);
+    match.startTime.$gte = start;
   }
+  if (endDate) {
+    // তারিখটিকে সেই দিনের শেষে সেট করুন (UTC তে)
+    const end = new Date(endDate);
+    end.setUTCHours(23, 59, 59, 999);
+    match.startTime.$lte = end;
+  }
+}
   
   const sort = { [sortBy]: order === "desc" ? -1 : 1 };
   const data = await DrawerSession.find(match)
+    .populate("user", "userName role")
     .sort(sort)
     .skip((parseInt(page) - 1) * parseInt(limit))
     .limit(parseInt(limit));
