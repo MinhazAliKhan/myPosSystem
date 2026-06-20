@@ -40,11 +40,15 @@ const CreateOrder = () => {
   const handlePay = async () => {
     if (cart.length === 0) return toast.error("Cart is empty!");
     if (!status.shift) return toast.error("No active shift!");
-    if (parseFloat(receivedAmount) < totalAmount) return toast.error("Insufficient cash!");
+    
+    // ভ্যালিডেশন: পেমেন্ট অ্যামাউন্ট অবশ্যই টোটাল অ্যামাউন্টের সমান বা বেশি হতে হবে
+    if (parseFloat(receivedAmount || 0) < totalAmount) {
+      return toast.error("Insufficient cash!");
+    }
 
     const saleData = {
       items: cart.map(item => ({ productId: item.productId, quantity: item.quantity })),
-      receivedAmount: parseFloat(receivedAmount),
+      receivedAmount: parseFloat(receivedAmount || 0),
       changeAmount: changeAmount,
       shiftId: status.shift._id
     };

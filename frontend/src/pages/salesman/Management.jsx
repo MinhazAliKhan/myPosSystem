@@ -73,6 +73,7 @@ const Management = () => {
         <Btn label="Dashboard" path="/salesman/dashboard" />
         <Btn label="Inventory" path="/salesman/inventory" />
         <Btn label="Sales History" path="/salesman/my-sales" />
+        <Btn label="Refunds" path="/salesman/refunds" />
         
         {/* POS Terminal এখন সবসময় অ্যাক্টিভ */}
         <Btn label="POS Terminal" path="/salesman" color="red" />

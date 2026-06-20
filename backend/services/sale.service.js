@@ -49,30 +49,49 @@ exports.createSale = async (data, userId) => {
 exports.voidSale = async (saleId, userId, reason) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
   try {
     const sale = await Sale.findById(saleId).session(session);
-    if (!sale || sale.status === "voided") throw new Error("Sale not found or already voided");
-    
-    // Restore product stock
-    for (const item of sale.items) { 
-      await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.quantity } }, { session }); 
+    if (!sale || sale.status === "voided") {
+      throw new Error("Sale not found or already voided");
     }
-    
-    // Deduct from Drawer Session (Safety check added)
-    if (sale.drawerSession) {
-      await DrawerSession.findByIdAndUpdate(sale.drawerSession, { 
+
+    // ১. স্টক আপডেট (এখানে 'item.productId' ব্যবহার করা হয়েছে)
+    for (let item of sale.items) {
+      await Product.findByIdAndUpdate(
+        item.productId, // এখানে তোমার মডেলে 'productId' আছে, তাই এটিই দিতে হবে
+        { $inc: { stock: item.quantity } },
+        { session }
+      );
+    }
+
+    // ২. ড্রয়ার এবং শিফট আপডেট
+    const activeDrawer = await DrawerSession.findOne({ 
+      user: userId, 
+      status: "active" 
+    }).session(session);
+
+    if (activeDrawer) {
+      await DrawerSession.findByIdAndUpdate(activeDrawer._id, {
         $inc: { drawerSales: -sale.totalAmount } 
       }, { session });
+
+      await Shift.findByIdAndUpdate(activeDrawer.shiftId, {
+        $inc: { totalSales: -sale.totalAmount }
+      }, { session });
     }
-    
-    sale.status = "voided"; 
-    sale.voidedBy = userId; 
-    sale.voidedAt = new Date(); 
+
+    // ৩. সেলের স্ট্যাটাস আপডেট
+    sale.status = "voided";
+    sale.voidedBy = userId;
+    sale.voidedAt = new Date();
     sale.voidReason = reason;
-    
+
     await sale.save({ session });
+
     await session.commitTransaction();
     return sale;
+
   } catch (err) { 
     await session.abortTransaction(); 
     throw err; 
