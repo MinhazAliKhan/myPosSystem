@@ -75,28 +75,23 @@ const createRefund = async (data, userId) => {
       }, { session });
     }
 
-    // ৪. সক্রিয় DrawerSession এবং Shift আপডেট করা
+    // ৪. সক্রিয় DrawerSession আপডেট করা (Shift আপডেট করার প্রয়োজন নেই)
     const activeDrawer = await DrawerSession.findOne({ 
       user: userId, 
       status: "active" 
     }).session(session);
 
     if (activeDrawer) {
-      // ড্রয়ার সেশনের বিক্রির হিসাব থেকে বিয়োগ
+      // ড্রয়ার সেশনের বিক্রির হিসাব থেকে বিয়োগ
       await DrawerSession.findByIdAndUpdate(activeDrawer._id, {
         $inc: { drawerSales: -calculatedTotal } 
-      }, { session });
-
-      // সংশ্লিষ্ট শিফটের মোট বিক্রির হিসাব থেকেও বিয়োগ
-      await Shift.findByIdAndUpdate(activeDrawer.shiftId, {
-        $inc: { totalSales: -calculatedTotal }
       }, { session });
     }
 
     // ৫. স্টক আপডেট (রিফান্ড পণ্য স্টকে যোগ)
     for (let item of data.items) {
       await Product.findByIdAndUpdate(
-        item.product, 
+        item.productId, // এখানে তোমার মডেলে 'productId' আছে, তাই এটিই দিতে হবে
         { $inc: { stock: item.quantity } }, 
         { session }
       );

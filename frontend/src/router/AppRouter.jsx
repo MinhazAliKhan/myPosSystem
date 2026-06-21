@@ -45,6 +45,7 @@ import DailySummery from "../features/report/DailySummery";
 import SaleDetails from './../pages/salesman/SaleDetails';
 import Refund from "../pages/common/refund/Refund";
 
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -99,6 +100,7 @@ const router = createBrowserRouter([
       { path: "inventory", element: <CheckStock /> },
       { path: "drawer-report", element: <DrawerReport /> },
       { path: "refunds", element: <Refund /> },
+      { path: "expenses", element: <Expense /> },
     ],
   },
 ]);

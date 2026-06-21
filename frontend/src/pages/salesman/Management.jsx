@@ -74,8 +74,9 @@ const Management = () => {
         <Btn label="Inventory" path="/salesman/inventory" />
         <Btn label="Sales History" path="/salesman/my-sales" />
         <Btn label="Refunds" path="/salesman/refunds" />
+        <Btn label="Expenses" path="/salesman/expenses" />
         
-        {/* POS Terminal এখন সবসময় অ্যাক্টিভ */}
+        {/* POS Terminal এখন সবসময় অ্যাক্টিভ */}
         <Btn label="POS Terminal" path="/salesman" color="red" />
       </div>
     </div>

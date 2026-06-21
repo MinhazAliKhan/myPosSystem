@@ -56,7 +56,7 @@ exports.voidSale = async (saleId, userId, reason) => {
       throw new Error("Sale not found or already voided");
     }
 
-    // ১. স্টক আপডেট (এখানে 'item.productId' ব্যবহার করা হয়েছে)
+    // ১. স্টক আপডেট (এখানে 'item.productId' ব্যবহার করা হয়েছে)
     for (let item of sale.items) {
       await Product.findByIdAndUpdate(
         item.productId, // এখানে তোমার মডেলে 'productId' আছে, তাই এটিই দিতে হবে
@@ -65,7 +65,7 @@ exports.voidSale = async (saleId, userId, reason) => {
       );
     }
 
-    // ২. ড্রয়ার এবং শিফট আপডেট
+    // ২. ড্রয়ার আপডেট (শিফট আপডেট করার প্রয়োজন নেই, কারণ এটি এগ্রিগেশন দিয়ে ক্যালকুলেট করা হয়)
     const activeDrawer = await DrawerSession.findOne({ 
       user: userId, 
       status: "active" 
@@ -74,10 +74,6 @@ exports.voidSale = async (saleId, userId, reason) => {
     if (activeDrawer) {
       await DrawerSession.findByIdAndUpdate(activeDrawer._id, {
         $inc: { drawerSales: -sale.totalAmount } 
-      }, { session });
-
-      await Shift.findByIdAndUpdate(activeDrawer.shiftId, {
-        $inc: { totalSales: -sale.totalAmount }
       }, { session });
     }
 

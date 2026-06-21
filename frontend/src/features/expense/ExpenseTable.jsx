@@ -1,48 +1,67 @@
-import React from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import React from "react";
 
-const ExpenseTable = ({ expenses, onEdit, onDelete, isAdmin }) => {
+const ExpenseTable = ({ expenses }) => {
+  if (!expenses || expenses.length === 0) {
+    return (
+      <div className="text-center py-10 text-gray-400 bg-white rounded-xl shadow-sm border border-gray-200">
+        No expenses found.
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="bg-slate-50/50 border-b border-gray-100">
-            <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-            <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-            <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount</th>
-            <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-            <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Added By</th>
-            {isAdmin && <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50 border-b uppercase text-xs text-gray-500 text-left">
+          <tr>
+            <th className="px-6 py-4">Date</th>
+            <th className="px-6 py-4">Salesman</th>
+            <th className="px-6 py-4">Shift</th>
+            <th className="px-6 py-4">Category</th>
+            <th className="px-6 py-4">Note</th>
+            <th className="px-6 py-4 text-right">Amount</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
-          {expenses.map((item) => (
-            <tr key={item._id} className="hover:bg-blue-50/10 transition-all">
-              <td className="p-5 text-xs font-bold text-slate-600">{new Date(item.date).toLocaleDateString('en-GB')}</td>
-              <td className="p-5"><span className="px-3 py-1 bg-slate-100 rounded-full text-[9px] font-black uppercase text-slate-500">{item.category}</span></td>
-              <td className="p-5 text-sm font-black text-slate-800">{Number(item.amount).toLocaleString()} TK</td>
-              <td className="p-5 text-center">
-                {item.isFromRegister ? (
-                  <span className="text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md text-[9px] font-black uppercase border border-orange-100">Register</span>
-                ) : (
-                  <span className="text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md text-[9px] font-black uppercase border border-blue-100">Admin</span>
-                )}
-              </td>
-              <td className="p-5">
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[11px] font-black text-slate-700 uppercase">{item.createdBy?.userName || "N/A"}</span>
-                </div>
-              </td>
-              {isAdmin && (
-                <td className="p-5">
-                  <div className="flex justify-center gap-2 transition-all">
-                    <button onClick={() => onEdit(item)} className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg shadow-sm border border-blue-50"><Edit size={16}/></button>
-                    <button onClick={() => onDelete(item._id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg shadow-sm border border-red-50"><Trash2 size={16}/></button>
-                  </div>
+        <tbody className="divide-y divide-gray-100">
+          {expenses.map((doc) =>
+            doc.expenses.map((item, index) => (
+              <tr key={`${doc._id}-${index}`} className="hover:bg-gray-50">
+                {/* Date */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {new Date(doc.createdAt).toLocaleDateString()}
                 </td>
-              )}
-            </tr>
-          ))}
+                
+                {/* Salesman Name: অবজেক্ট চেক করে নাম দেখাচ্ছি */}
+                <td className="px-6 py-4 font-medium text-gray-900">
+                  {doc.createdBy?.userName || "Admin"}
+                </td>
+                
+                {/* Shift ID: অবজেক্ট হলে আইডি বের করছি, নাহলে N/A */}
+                <td className="px-6 py-4 font-mono text-xs text-gray-500">
+                  {doc.shift?._id 
+                    ? doc.shift._id.toString().slice(-6) 
+                    : (doc.shift ? doc.shift.toString().slice(-6) : "N/A")}
+                </td>
+                
+                {/* Category */}
+                <td className="px-6 py-4">
+                  <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
+                    {item.category}
+                  </span>
+                </td>
+                
+                {/* Note */}
+                <td className="px-6 py-4 text-gray-600">
+                  {item.note || "-"}
+                </td>
+                
+                {/* Amount */}
+                <td className="px-6 py-4 text-right font-bold text-gray-900">
+                  {Number(item.amount || 0).toLocaleString()} TK
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
