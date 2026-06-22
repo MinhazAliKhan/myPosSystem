@@ -44,6 +44,7 @@ import ShiftReport from "../features/report/ShiftReport";
 import DailySummery from "../features/report/DailySummery";
 import SaleDetails from './../pages/salesman/SaleDetails';
 import Refund from "../pages/common/refund/Refund";
+import DashboardSummary from './../pages/common/DashboardSummary';
 
 
 const router = createBrowserRouter([
@@ -90,7 +91,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <CreateOrder /> },
       { path: "manage", element: <Management /> },
-      { path: "dashboard", element: <SalesDashboard /> },
+      { path: "dashboard", element: <DashboardSummary /> }, // SalesDashboard এর বদলে এটি ব্যবহার করতে পারো যদি এটিই তোমার মেইন ড্যাশবোর্ড হয়
       { path: "open-shift", element: <OpenShift /> },
       { path: "close-shift", element: <CloseShift /> },
       { path: "open-drawer", element: <OpenDrawer /> },
