@@ -11,7 +11,7 @@ exports.getTodaySummary = async (req, res, next) => {
     const drawerSessionId = req.drawerSessionId;
     const salesmanId = new mongoose.Types.ObjectId(req.user.id);
 
-    // ১. চেক করো ড্রয়ার সেশন আছে কি না
+    // ১. চেক করো ড্রয়ার সেশন আছে কি না
     if (!drawerSessionId) {
       return res.status(400).json({
         success: false,
@@ -32,18 +32,16 @@ exports.getTodaySummary = async (req, res, next) => {
       drawerSession: drawerObjectId
     };
 
-    // ডিবাগিং লগ (টার্মিনালে চেক করো)
-    console.log("Fetching report for Drawer:", drawerObjectId);
-
-    // ডাটা ফেচিং
-    const [sales, expenses] = await Promise.all([
+    // ডাটা ফেচিং (সব নতুন অ্যাগ্রিগেশন এখানে যুক্ত করা হয়েছে)
+    const [sales, expenses, topProducts, voided, profit, hourly, avgBasket] = await Promise.all([
       reportService.getSalesSummary(salesCondition),
-      reportService.getExpenseSummary(expenseCondition)
+      reportService.getExpenseSummary(expenseCondition),
+      reportService.getTopProducts(salesCondition),
+      reportService.getVoidedSummary(salesCondition),
+      reportService.getProfitSummary(salesCondition),
+      reportService.getHourlySales(salesCondition),
+      reportService.getAverageBasketValue(salesCondition)
     ]);
-
-    // ডিবাগিং লগ (ডাটা আসছে কি না চেক করো)
-    console.log("Sales Data:", sales);
-    console.log("Expense Data:", expenses);
 
     // ডাটা জিরো চেক
     const totalSales = sales?.totalSales || 0;
@@ -54,7 +52,12 @@ exports.getTodaySummary = async (req, res, next) => {
       data: {
         sales: { totalSales },
         expenses: { totalExpenses },
-        netCash: totalSales - totalExpenses
+        netCash: totalSales - totalExpenses,
+        topProducts,
+        voidedSummary: voided,
+        profitSummary: profit[0] || { totalRevenue: 0, totalCost: 0, netProfit: 0 },
+        hourlySales: hourly,
+        averageBasket: avgBasket[0] || { averageValue: 0, totalOrders: 0 }
       }
     });
   } catch (err) {
