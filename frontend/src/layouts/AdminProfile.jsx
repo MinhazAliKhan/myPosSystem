@@ -8,7 +8,7 @@ const AdminProfile = () => {
   const activeClass = "bg-gray-700 p-2 rounded block text-yellow-400 font-semibold";
   const normalClass = "hover:bg-gray-700 p-2 rounded block transition text-white";
 
-  // মেনু লিঙ্কগুলোতে ক্লিক করলে যেন মেনু ক্লোজ হয় তার ফাংশন
+  // মেনু লিঙ্কগুলোতে ক্লিক করলে যেন মেনু ক্লোজ হয় তার ফাংশন
   const handleLinkClick = () => {
     setIsOpen(false);
   };
@@ -30,6 +30,7 @@ const AdminProfile = () => {
       <NavLink onClick={handleLinkClick} to="/admin/drawer-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Drawer Report</NavLink>
       <NavLink onClick={handleLinkClick} to="/admin/shift-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Shift Report</NavLink>
       <NavLink onClick={handleLinkClick} to="/admin/daily-summary-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Daily Summary Report</NavLink>
+      <NavLink onClick={handleLinkClick} to="/admin/inventory-report" className={({ isActive }) => isActive ? activeClass : normalClass}>Inventory Report</NavLink>
 
       <div className="pt-4 pb-2 text-xs uppercase text-gray-500 font-bold tracking-wider">Others</div>
       <NavLink onClick={handleLinkClick} to="/admin/suppliers" className={({ isActive }) => isActive ? activeClass : normalClass}>Manage Suppliers</NavLink>

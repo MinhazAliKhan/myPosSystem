@@ -45,6 +45,7 @@ import DailySummery from "../features/report/DailySummery";
 import SaleDetails from './../pages/salesman/SaleDetails';
 import Refund from "../pages/common/refund/Refund";
 import DashboardSummary from './../pages/common/DashboardSummary';
+import InventoryReport from './../pages/common/InventoryReport';
 
 
 const router = createBrowserRouter([
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
           { path: "drawer-report", element: <DrawerReportAdmin /> },
           { path: "shift-report", element: <ShiftReport /> },
           { path: "daily-summary-report", element: <DailySummery /> },
+          { path: "inventory-report", element: <InventoryReport /> },
           { path: "products/getProduct/:id", element: <ProductDetails /> },
         ],
       },
@@ -101,6 +103,7 @@ const router = createBrowserRouter([
       { path: "inventory", element: <CheckStock /> },
       { path: "drawer-report", element: <DrawerReport /> },
       { path: "refunds", element: <Refund /> },
+      { path: "inventory-report", element: <InventoryReport /> },
       { path: "expenses", element: <Expense /> },
     ],
   },
