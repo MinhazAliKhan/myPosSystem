@@ -178,7 +178,8 @@ exports.getSales = async (userId, query) => {
     .populate("voidedBy", "userName")
     .sort({ createdAt: -1 })
     .skip((parseInt(page) - 1) * parseInt(limit))
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .lean(); // .lean() ব্যবহার করা ভালো, এটি ডাটাকে plain JS object এ কনভার্ট করে ফলে পারফরম্যান্স বাড়ে
     
   const total = await Sale.countDocuments(match);
   

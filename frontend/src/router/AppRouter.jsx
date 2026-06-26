@@ -77,6 +77,7 @@ const router = createBrowserRouter([
           { path: "daily-summary-report", element: <DailySummery /> },
           { path: "inventory-report", element: <InventoryReport /> },
           { path: "products/getProduct/:id", element: <ProductDetails /> },
+          { path: "sales/:id", element: <SaleDetails /> },
         ],
       },
     ],

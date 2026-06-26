@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import DailySummary from "../common/AdminDashboardSummary"; 
 import DrawerReport from "../../features/report/DrawerReport"; 
-import ShiftReport from "../../features/report/ShiftReport"; // নতুন ইমপোর্ট
+import ShiftReport from "../../features/report/ShiftReport";
+import SalesHistory from './../salesman/SalesHistory'; // টেবিল ভিউ
+import SalesHistoryCards from './../salesman/SalesHistoryCards'; // কার্ড ভিউ
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("drawers");
@@ -11,8 +13,7 @@ const AdminDashboard = () => {
       <h1 className="text-2xl font-black mb-6">Admin Overview</h1>
       
       {/* ট্যাব বাটন */}
-      <div className="flex gap-4 mb-6">
-        
+      <div className="flex flex-wrap gap-4 mb-6">
         <button 
           onClick={() => setActiveTab("drawers")} 
           className={`px-4 py-2 text-sm font-bold rounded-lg transition ${activeTab === "drawers" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}
@@ -31,6 +32,20 @@ const AdminDashboard = () => {
         >
           Running Shift Summary
         </button>
+        {/* টেবিল ভিউ ট্যাব */}
+        <button 
+          onClick={() => setActiveTab("salesHistory")} 
+          className={`px-4 py-2 text-sm font-bold rounded-lg transition ${activeTab === "salesHistory" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}
+        >
+          Sales History (Table)
+        </button>
+        {/* কার্ড ভিউ ট্যাব */}
+        <button 
+          onClick={() => setActiveTab("salesHistoryCards")} 
+          className={`px-4 py-2 text-sm font-bold rounded-lg transition ${activeTab === "salesHistoryCards" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}
+        >
+          Sales History (Cards)
+        </button>
       </div>
 
       {/* কন্ডিশনাল রেন্ডারিং */}
@@ -38,6 +53,8 @@ const AdminDashboard = () => {
         {activeTab === "summary" && <DailySummary />}
         {activeTab === "drawers" && <DrawerReport />}
         {activeTab === "shifts" && <ShiftReport />}
+        {activeTab === "salesHistory" && <SalesHistory />} 
+        {activeTab === "salesHistoryCards" && <SalesHistoryCards />} 
       </div>
     </div>
   );

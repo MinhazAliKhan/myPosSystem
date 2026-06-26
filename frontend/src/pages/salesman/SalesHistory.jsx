@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import saleApi from "../../api/sale.service";
 import { toast } from "react-hot-toast";
 
 const SalesHistory = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,8 +22,6 @@ const SalesHistory = () => {
   const fetchSales = async () => {
     try {
       setLoading(true);
-      
-      // ডেট ফিল্টারটি সঠিকভাবে পাঠানোর জন্য লজিক
       const params = { 
         page: currentPage, 
         limit, 
@@ -31,7 +30,7 @@ const SalesHistory = () => {
       
       if (startDate) {
         params.startDate = startDate;
-        params.endDate = startDate; // একই দিনে ফিল্টার করার জন্য
+        params.endDate = startDate; 
       }
 
       const response = await saleApi.getSales(params);
@@ -41,6 +40,14 @@ const SalesHistory = () => {
       toast.error("Failed to load sales");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDetails = (id) => {
+    if (pathname.includes("/admin")) {
+      navigate(`/admin/sales/${id}`);
+    } else {
+      navigate(`/salesman/sales/${id}`);
     }
   };
 
@@ -94,6 +101,7 @@ const SalesHistory = () => {
               <tr className="border-b bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                 <th className="p-4">Date</th>
                 <th className="p-4">ID</th>
+                <th className="p-4">Cashier</th>
                 <th className="p-4">Amount</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-center">Actions</th>
@@ -104,6 +112,7 @@ const SalesHistory = () => {
                 <tr key={sale._id} className="border-b hover:bg-slate-50 transition-colors">
                   <td className="p-4 text-sm">{new Date(sale.createdAt).toLocaleDateString()}</td>
                   <td className="p-4 font-mono font-bold text-slate-700">#{sale._id.slice(-6).toUpperCase()}</td>
+                  <td className="p-4 text-sm font-medium text-slate-600">{sale.createdBy?.userName || "N/A"}</td>
                   <td className="p-4 font-bold text-slate-800">${sale.totalAmount.toFixed(2)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
@@ -114,7 +123,7 @@ const SalesHistory = () => {
                   </td>
                   <td className="p-4 flex justify-center gap-2">
                     <button 
-                      onClick={() => navigate(`/salesman/sales/${sale._id}`)} 
+                      onClick={() => handleDetails(sale._id)} 
                       className="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all"
                     >
                       Details
@@ -152,4 +161,5 @@ const SalesHistory = () => {
     </div>
   );
 };
+
 export default SalesHistory;
