@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import shiftApi from "../../api/shift.service";
-import reportApi from "../../api/report.service";
+import { useAuth } from "../../store/AuthContext";
 import { toast } from "react-hot-toast";
 
 const Management = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeShift, setActiveShift] = useState(null);
   const [activeDrawer, setActiveDrawer] = useState(null);
@@ -32,7 +33,7 @@ const Management = () => {
   const Btn = ({ label, onClick, path, color, disabled }) => (
     <button
       onClick={onClick ? onClick : () => navigate(path)}
-      disabled={disabled || loading}
+      disabled={disabled}
       className={`group relative w-full p-4 md:p-6 rounded-3xl font-bold text-[11px] md:text-[13px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center 
       ${disabled 
         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
@@ -58,27 +59,25 @@ const Management = () => {
       </div>
 
       <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+        {/* শিফটের জন্য আগের মতো ডিজেবল কন্ডিশন থাকছে */}
         <Btn label="Open Shift" path="/salesman/open-shift" color="red" disabled={!!activeShift} />
         <Btn label="Close Shift" path="/salesman/close-shift" color="red" disabled={!activeShift} />
-        <Btn label="Open Drawer" path="/salesman/open-drawer" color="emerald" disabled={!activeShift || !!activeDrawer} />
+        
+        {/* ড্রয়ারের জন্য কোনো ডিজেবল কন্ডিশন নেই */}
+        <Btn label="Open Drawer" path="/salesman/open-drawer" color="emerald" />
         
         <Btn 
           label="Close Drawer" 
           color="emerald"
-          disabled={!activeDrawer}
-          onClick={() => activeDrawer && navigate(`/salesman/drawer/${activeDrawer._id}/close`)} 
+          onClick={() => activeDrawer ? navigate(`/salesman/drawer/${activeDrawer._id}/close`) : toast.error("No active drawer found!")} 
         />
         
         <Btn label="Drawer Report" path="/salesman/drawer-report" />
         <Btn label="Dashboard" path="/salesman/dashboard" />
-        
-        {/* পুরনো Inventory বাটন সরিয়ে Inventory Report বসানো হলো */}
         <Btn label="Inventory Report" path="/salesman/inventory-report" />
-        
         <Btn label="Sales History" path="/salesman/my-sales" />
         <Btn label="Refunds" path="/salesman/refunds" />
         <Btn label="Expenses" path="/salesman/expenses" />
-        
         <Btn label="POS Terminal" path="/salesman" color="red" />
       </div>
     </div>

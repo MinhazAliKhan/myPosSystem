@@ -113,3 +113,34 @@ exports.getAverageBasketValue = async (matchCondition) => {
     }
   ]);
 };
+// সেলসম্যান পারফরম্যান্স সার্ভিস
+exports.getSalesmanPerformance = async (matchCondition) => {
+  return await Sale.aggregate([
+    { $match: matchCondition },
+    {
+      $group: {
+        _id: "$createdBy",
+        totalSales: { $sum: "$totalAmount" },
+        transactionCount: { $sum: 1 }
+      }
+    },
+    {
+      $lookup: {
+        from: "users", // তোমার ইউজার কালেকশনের নাম
+        localField: "_id",
+        foreignField: "_id",
+        as: "salesmanDetails"
+      }
+    },
+    { $unwind: { path: "$salesmanDetails", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 1,
+        name: { $ifNull: ["$salesmanDetails.userName", "Unknown"] },
+        totalSales: 1,
+        transactionCount: 1
+      }
+    },
+    { $sort: { totalSales: -1 } }
+  ]);
+};

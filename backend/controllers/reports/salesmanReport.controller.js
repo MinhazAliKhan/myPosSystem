@@ -1,38 +1,22 @@
 const reportService = require("../../services/report.services");
 const mongoose = require("mongoose");
+const Shift = require("../../models/shift.model");
 
+// ১. সেলসম্যানের জন্য রিপোর্ট
 exports.getTodaySummary = async (req, res, next) => {
   try {
-    // Check if user is authenticated
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
-    }
-
     const drawerSessionId = req.drawerSessionId;
     const salesmanId = new mongoose.Types.ObjectId(req.user.id);
 
-    // ১. চেক করো ড্রয়ার সেশন আছে কি না
     if (!drawerSessionId) {
-      return res.status(400).json({
-        success: false,
-        message: "No active drawer session found. Please open a drawer first."
-      });
+      return res.status(400).json({ success: false, message: "No active drawer session found." });
     }
 
     const drawerObjectId = new mongoose.Types.ObjectId(drawerSessionId);
+    
+    const salesCondition = { drawerSession: drawerObjectId, status: "completed" };
+    const expenseCondition = { drawerSession: drawerObjectId };
 
-    const salesCondition = {
-      createdBy: salesmanId,
-      drawerSession: drawerObjectId,
-      status: "completed"
-    };
-
-    const expenseCondition = {
-      createdBy: salesmanId,
-      drawerSession: drawerObjectId
-    };
-
-    // ডাটা ফেচিং (সব নতুন অ্যাগ্রিগেশন এখানে যুক্ত করা হয়েছে)
     const [sales, expenses, topProducts, voided, profit, hourly, avgBasket] = await Promise.all([
       reportService.getSalesSummary(salesCondition),
       reportService.getExpenseSummary(expenseCondition),
@@ -43,16 +27,12 @@ exports.getTodaySummary = async (req, res, next) => {
       reportService.getAverageBasketValue(salesCondition)
     ]);
 
-    // ডাটা জিরো চেক
-    const totalSales = sales?.totalSales || 0;
-    const totalExpenses = expenses?.totalExpenses || 0;
-
     res.status(200).json({
       success: true,
       data: {
-        sales: { totalSales },
-        expenses: { totalExpenses },
-        netCash: totalSales - totalExpenses,
+        sales: { totalSales: sales?.totalSales || 0 },
+        expenses: { totalExpenses: expenses?.totalExpenses || 0 },
+        netCash: (sales?.totalSales || 0) - (expenses?.totalExpenses || 0),
         topProducts,
         voidedSummary: voided,
         profitSummary: profit[0] || { totalRevenue: 0, totalCost: 0, netProfit: 0 },
@@ -60,8 +40,44 @@ exports.getTodaySummary = async (req, res, next) => {
         averageBasket: avgBasket[0] || { averageValue: 0, totalOrders: 0 }
       }
     });
-  } catch (err) {
-    console.error("Backend Error Details:", err);
-    next(err);
-  }
+  } catch (err) { next(err); }
+};
+
+// ২. অ্যাডমিনের জন্য রিপোর্ট (শিফট-ভিত্তিক + সেলসম্যান পারফরম্যান্স)
+exports.getAdminSummary = async (req, res, next) => {
+  try {
+    const activeShift = await Shift.findOne({ status: "open" }).sort({ startTime: -1 });
+
+    if (!activeShift) {
+      return res.status(404).json({ success: false, message: "No active shift found." });
+    }
+
+    const matchCondition = { shift: activeShift._id, status: "completed" };
+    const expenseCondition = { shift: activeShift._id };
+
+    const [sales, expenses, topProducts, voided, profit, hourly, avgBasket, performance] = await Promise.all([
+      reportService.getSalesSummary(matchCondition),
+      reportService.getExpenseSummary(expenseCondition),
+      reportService.getTopProducts(matchCondition),
+      reportService.getVoidedSummary(matchCondition),
+      reportService.getProfitSummary(matchCondition),
+      reportService.getHourlySales(matchCondition),
+      reportService.getAverageBasketValue(matchCondition),
+      reportService.getSalesmanPerformance(matchCondition) // নতুন পারফরম্যান্স যোগ করা হলো
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: { 
+        sales, 
+        expenses, 
+        topProducts, 
+        voidedSummary: voided, 
+        profit: profit[0] || { totalRevenue: 0, totalCost: 0, netProfit: 0 }, 
+        hourlySales: hourly, 
+        avgBasket: avgBasket[0] || { averageValue: 0, totalOrders: 0 },
+        salesmanPerformance: performance // পারফরম্যান্স ডেটা এখানে পাঠানো হলো
+      }
+    });
+  } catch (err) { next(err); }
 };

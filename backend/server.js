@@ -76,7 +76,7 @@ app.use("/api/v1/expenses", require("./route/expense.route"));
 app.use("/api/v1/reports", require("./route/report.route"));
 app.use("/api/v1/refunds", require("./route/refund.route"));
 app.use("/api/v1/reports/salesman", require("./route/reports/salesmanReport.routes"));
-// app.use("/api/v1/reports/admin", require("./route/reports/adminReport.routes"));
+app.use("/api/v1/reports/admin", require("./route/reports/salesmanReport.routes"));
 app.use("/api/v1/reports/inventories", require("./route/reports/inventories.route"));
 // ----------------------
 // Error middleware

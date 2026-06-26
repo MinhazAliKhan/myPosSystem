@@ -8,7 +8,7 @@ import Loging from "../pages/Loging";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 // ADMIN & LAYOUT
-import AdminDashboard from "../pages/admin/AdminDashboard";
+
 import AdminProfile from "../layouts/AdminProfile";
 import UserProfile from "../layouts/UserProfile";
 
@@ -47,6 +47,8 @@ import Refund from "../pages/common/refund/Refund";
 import DashboardSummary from './../pages/common/DashboardSummary';
 import InventoryReport from './../pages/common/InventoryReport';
 
+import AdminDashboard from "../pages/admin/AdminDashboard";
+
 
 const router = createBrowserRouter([
   {
@@ -60,7 +62,7 @@ const router = createBrowserRouter([
         path: "admin",
         element: <ProtectedRoute role="ADMIN"><AdminProfile /></ProtectedRoute>,
         children: [
-          { index: true, element: <AdminDashboard /> },
+          { index: true, element: <AdminDashboard />},
           { path: "dashboard", element: <AdminDashboard /> },
           { path: "categories", element: <Category /> },
           { path: "brands", element: <Brand /> },

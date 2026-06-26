@@ -25,7 +25,6 @@ exports.finalizeDrawerSession = async (sessionId, data) => {
   if (!session) throw new Error("Session not found");
   if (session.status === "cashed-out") throw new Error("Drawer already cashed out");
   
-  // ডেটা না থাকলে 0 ধরে হিসাব করা হচ্ছে
   const opening = Number(session.openingCash) || 0;
   const sales = Number(session.drawerSales) || 0;
   const expenses = Number(session.drawerExpenses) || 0;
