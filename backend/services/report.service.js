@@ -34,90 +34,102 @@ exports.getDrawerReport = async (userId, query) => {
   return { data, total, page: parseInt(page), limit: parseInt(limit) };
 };
 
-// ২. Admin এর জন্য শিফট রিপোর্ট (Date wise filtering)
-exports.getShiftReport = async (query) => {
-  const { page = 1, limit = 10 } = query;
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-
-  return await Shift.aggregate([
-    { $sort: { startTime: -1 } },
-    {
-      $project: {
-        startTime: 1,
-        status: 1,
-        totalSales: 1,
-        totalDepositedCash: 1,
-        shortOver: { $subtract: [{ $ifNull: ["$totalDepositedCash", 0] }, { $ifNull: ["$totalSales", 0] }] }
-      }
-    },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$startTime" } },
-        shifts: { $push: "$$ROOT" },
-        dailySales: { $sum: "$totalSales" },
-        dailyDeposit: { $sum: "$totalDepositedCash" },
-        dailyShortOver: { $sum: "$shortOver" }
-      }
-    },
-    { $sort: { _id: -1 } },
-    { $skip: skip },
-    { $limit: parseInt(limit) }
-  ]);
-};
-
-// ৩. Admin এর জন্য ডেইলি সামারি
-exports.getDailySummaryReport = async (query) => {
-  const { date } = query;
-  let match = { status: "closed" };
-
-  if (date) {
-    const targetDate = new Date(date);
-    const startOfDay = new Date(targetDate.setUTCHours(0, 0, 0, 0));
-    const endOfDay = new Date(targetDate.setUTCHours(23, 59, 59, 999));
-    match.endTime = { $gte: startOfDay, $lte: endOfDay };
+// ২. শিফট রিপোর্ট (Admin সবার জন্য, Salesman শুধু তার নিজের শিফটের জন্য)
+exports.getShiftReport = async (userId, query) => {
+  const { page = 1, limit = 10, startDate, endDate } = query;
+  
+  // ১. ইউজার বা অ্যাডমিন অনুযায়ী ফিল্টার তৈরি
+  let match = userId ? { openedBy: new mongoose.Types.ObjectId(userId) } : {};
+  
+  // ২. তারিখ অনুযায়ী ফিল্টারিং
+  if (startDate || endDate) {
+    match.startTime = {};
+    if (startDate) {
+        const start = new Date(startDate);
+        start.setUTCHours(0, 0, 0, 0);
+        match.startTime.$gte = start;
+    }
+    if (endDate) {
+        const end = new Date(endDate);
+        end.setUTCHours(23, 59, 59, 999);
+        match.startTime.$lte = end;
+    }
   }
 
-  const result = await Shift.aggregate([
-    { $match: match },
-    { 
-      $group: { 
-        _id: null,
-        totalSales: { $sum: { $toDouble: { $ifNull: ["$totalSales", 0] } } },
-        totalDepositedCash: { $sum: { $toDouble: { $ifNull: ["$totalDepositedCash", 0] } } },
-        totalShifts: { $sum: 1 }
-      } 
-    },
-    {
-      $project: {
-        _id: 0,
-        totalSales: 1,
-        totalDepositedCash: 1,
-        totalShifts: 1,
-        netRevenue: { $ifNull: ["$totalSales", 0] } // এখন নেট রেভিনিউ সরাসরি সেলস থেকে আসছে
-      }
-    }
-  ]);
+  // ৩. ডাটাবেস থেকে ডাটা আনা (Pagination ও Sort সহ)
+  const data = await Shift.find(match)
+    .populate("openedBy", "userName role")
+    .sort({ startTime: -1 })
+    .skip((parseInt(page) - 1) * parseInt(limit))
+    .limit(parseInt(limit));
 
-  return result.length > 0 ? result[0] : { 
-    totalSales: 0, totalDepositedCash: 0, totalShifts: 0, netRevenue: 0 
+  // ৪. টোটাল শিফটের সংখ্যা (Pagination এর জন্য)
+  const total = await Shift.countDocuments(match);
+  
+  return { 
+    data, 
+    total, 
+    page: parseInt(page), 
+    limit: parseInt(limit) 
   };
 };
-// ৪. মাসিক রিপোর্ট
-exports.getMonthlyReport = async () => {
-  // মাস/বছরের ফিল্টার ছাড়া শুধু সব ক্লোজড শিফট যোগ করুন
-  return await Shift.aggregate([
-    { 
-      $match: { 
-        status: "closed" // শুধু স্ট্যাটাস চেক করছে
-      } 
-    },
-    { 
-      $group: { 
-        _id: null, 
-        totalSales: { $sum: { $toDouble: { $ifNull: ["$totalSales", 0] } } },
-        totalDepositedCash: { $sum: { $toDouble: { $ifNull: ["$totalDepositedCash", 0] } } },
-        totalShifts: { $sum: 1 }
-      } 
-    }
+
+// ৩. ডেইলি সামারি রিপোর্ট (এগ্রিগেশন ব্যবহার করে)
+exports.getDailySummaryReport = async (userId, query) => {
+  const { date } = query;
+  // date string কে Date অবজেক্টে রূপান্তর
+  const targetDate = date ? new Date(date) : new Date();
+
+  // দিন অনুযায়ী রেঞ্জ সেট করা (UTC)
+  const startOfDay = new Date(targetDate);
+  startOfDay.setUTCHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(targetDate);
+  endOfDay.setUTCHours(23, 59, 59, 999);
+
+  let match = {
+    startTime: { $gte: startOfDay, $lte: endOfDay }
+  };
+  
+  if (userId) {
+    match.openedBy = new mongoose.Types.ObjectId(userId);
+  }
+
+  // ডাটাবেস থেকে লিস্ট আনা
+  const data = await Shift.find(match)
+    .populate("openedBy", "userName role")
+    .sort({ startTime: -1 });
+
+  return data; // এটি একটি Array রিটার্ন করবে
+};
+
+// ৪. মাসিক রিপোর্ট (নির্দিষ্ট মাস এবং বছর অনুযায়ী)
+exports.getMonthlyReport = async (userId, month, year) => {
+  // মাস (1-12) এবং বছর (যেমন: 2026) ইনপুট হিসেবে ধরছি
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59);
+
+  let match = {
+    startTime: { $gte: startDate, $lte: endDate }
+  };
+  if (userId) match.openedBy = new mongoose.Types.ObjectId(userId);
+
+  const data = await Shift.aggregate([
+    { $match: match },
+    { $project: {
+        day: { $dayOfMonth: "$startTime" },
+        totalSales: 1,
+        totalExpenses: 1,
+        totalShortOver: 1
+    }},
+    { $group: {
+        _id: "$day",
+        dailySales: { $sum: "$totalSales" },
+        dailyExpenses: { $sum: "$totalExpenses" },
+        dailyShortOver: { $sum: "$totalShortOver" }
+    }},
+    { $sort: { _id: 1 } }
   ]);
+
+  return data;
 };

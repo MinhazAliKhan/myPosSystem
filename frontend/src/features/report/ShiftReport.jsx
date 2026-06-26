@@ -1,75 +1,83 @@
 import React, { useEffect, useState } from "react";
 import reportApi from "../../api/report.service";
+import { toast } from "react-hot-toast";
 
 const ShiftReport = () => {
-  const [report, setReport] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchReport = async () => {
+    const fetchShifts = async () => {
       setLoading(true);
       try {
-        const res = await reportApi.getShiftReport({ page: 1, limit: 10 });
-        // ব্যাকএন্ডের এগ্রিগেশন অনুযায়ী সরাসরি ডেটা সেট করা
-        setReport(res.data?.data || []);
+        const res = await reportApi.getShiftReport({ page: 1, limit: 20 });
+        if (res.data?.success) {
+          // আপনার ডাটাবেস রেসপন্স অনুযায়ী ডাটা সেট করা
+          setShifts(res.data.data.data);
+        }
       } catch (err) {
-        console.error("Error:", err);
+        toast.error("রিপোর্ট লোড করতে ব্যর্থ হয়েছে!");
       } finally {
         setLoading(false);
       }
     };
-    fetchReport();
+    fetchShifts();
   }, []);
 
-  if (loading) return <div className="p-10 text-center text-gray-400">Loading...</div>;
-
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h1 className="text-xl font-black mb-6 uppercase text-gray-800">Shift Performance Report</h1>
-
-      {report.map((group) => (
-        <div key={group._id} className="mb-8 border rounded-xl overflow-hidden shadow-sm">
-          {/* হেডার: তারিখ এবং দিনের মোট সারসংক্ষেপ */}
-          <div className="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
-            <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">{group._id}</h2>
-            <div className="text-[10px] font-bold text-gray-500 uppercase">
-              Sales: {group.dailySales.toFixed(2)} | Deposit: {group.dailyDeposit.toFixed(2)}
-            </div>
-          </div>
-
-          <table className="w-full text-left text-sm">
-            <thead className="bg-white">
-              <tr className="text-gray-400 text-[10px] uppercase border-b">
-                <th className="py-2 px-4">Time</th>
-                <th className="py-2 px-4 text-right">Sales</th>
-                <th className="py-2 px-4 text-right">Deposit</th>
-                <th className="py-2 px-4 text-right">Diff</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {group.shifts.map((s) => (
-                <tr key={s._id} className="border-b last:border-b-0 hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-600">
-                    {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </td>
-                  <td className="py-3 px-4 text-right font-medium">{s.totalSales.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-right font-bold text-indigo-600">{s.totalDepositedCash.toFixed(2)}</td>
-                  <td className={`py-3 px-4 text-right font-mono ${s.shortOver < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                    {s.shortOver.toFixed(2)}
-                  </td>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 uppercase tracking-tight">Shift Performance History</h2>
+      
+      {loading ? (
+        <div className="text-center py-10">Loading Data...</div>
+      ) : (
+        <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-100 text-gray-600 uppercase text-[10px] font-bold tracking-wider">
+                <tr>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Time Period</th>
+                  <th className="px-6 py-4 text-right">Sales</th>
+                  <th className="px-6 py-4 text-right">Tax</th>
+                  <th className="px-6 py-4 text-right">Exp.</th>
+                  <th className="px-6 py-4 text-right">Deposit</th>
+                  <th className="px-6 py-4 text-right">Short/Over</th>
+                  <th className="px-6 py-4">Closing Note</th>
                 </tr>
-              ))}
-              {/* ডেইলি টোটাল ফুটার */}
-              <tr className="bg-indigo-50/50 font-bold text-xs text-indigo-700">
-                <td className="py-3 px-4 uppercase">Daily Total</td>
-                <td className="py-3 px-4 text-right">{group.dailySales.toFixed(2)}</td>
-                <td className="py-3 px-4 text-right">{group.dailyDeposit.toFixed(2)}</td>
-                <td className="py-3 px-4 text-right">{group.dailyShortOver.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100 text-sm">
+                {shifts.map((s) => (
+                  <tr key={s._id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${s.status === 'closed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {s.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      <div className="text-xs font-semibold">{new Date(s.startTime).toLocaleDateString()}</div>
+                      <div className="text-[10px] text-gray-400">
+                        {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                        {s.endTime ? new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium text-gray-700">{s.totalSales?.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right text-gray-600">{s.totalTax?.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right text-red-500">{s.totalExpenses?.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-bold text-indigo-600">{s.totalDepositedCash?.toFixed(2)}</td>
+                    <td className={`px-6 py-4 text-right font-black ${s.totalShortOver < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                      {s.totalShortOver?.toFixed(2) || "0.00"}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-gray-500 italic">
+                      {s.closingNote || "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      ))}
+      )}
     </div>
   );
 };

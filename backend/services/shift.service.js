@@ -29,7 +29,7 @@ exports.finalizeDrawerSession = async (sessionId, data) => {
   const sales = Number(session.drawerSales) || 0;
   const expenses = Number(session.drawerExpenses) || 0;
   
-  const expected = opening + sales - expenses;
+  const expected = (opening + sales) - expenses;
   
   session.actualCashEntered = Number(data.actualCashEntered) || 0;
   session.bagNumber = data.bagNumber;
@@ -56,18 +56,20 @@ exports.finalizeShift = async (shiftId, data) => {
           sales: { $sum: { $ifNull: ["$drawerSales", 0] } },
           tax: { $sum: { $ifNull: ["$drawerTax", 0] } },
           exp: { $sum: { $ifNull: ["$drawerExpenses", 0] } },
-          depo: { $sum: { $ifNull: ["$actualCashEntered", 0] } } 
+          depo: { $sum: { $ifNull: ["$actualCashEntered", 0] } },
+          totalShortOver: { $sum: { $ifNull: ["$shortOver", 0] } } 
       }}
     ]).session(session);
 
-    const s = summary[0] || { totalOpening: 0, sales: 0, tax: 0, exp: 0, depo: 0 };
+    const s = summary[0] || { totalOpening: 0, sales: 0, tax: 0, exp: 0, depo: 0,totalShortOver: 0 };
 
     const shift = await Shift.findByIdAndUpdate(shiftId, {
       status: "closed",
       totalSales: s.sales,
       totalTax: s.tax,
-      totalExpenses: s.exp,
+      totalExpenses: s.exp, // এখানে এক্সপেন্স যোগ করা হয়েছে
       totalDepositedCash: s.depo, 
+      totalShortOver: s.totalShortOver, // নতুন ফিল্ড আপডেট করা হলো
       closingNote: data.closingNote,
       endTime: new Date()
     }, { new: true, session });

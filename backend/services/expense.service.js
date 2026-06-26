@@ -74,7 +74,7 @@ const createExpense = async (data, userId, userRole) => {
       await DrawerSession.findByIdAndUpdate(
         activeDrawer._id,
         { 
-          $inc: { drawerExpenses: Number(totalAmount),drawerSales: -Number(totalAmount) } 
+          $inc: { drawerExpenses: Number(totalAmount) } 
         },
         { session }
       );
