@@ -24,16 +24,36 @@ const CreateOrder = () => {
   const handleNumPad = (num) => setReceivedAmount((prev) => prev + num);
   const handleBackspace = () => setReceivedAmount((prev) => prev.slice(0, -1));
 
+  const fetchData = async () => {
+    try {
+      const res = await shiftApi.getCurrentStatus();
+      const { shift, drawers } = res.data.data;
+      setStatus({ shift, drawer: drawers?.[0] || null });
+
+      const firstPage = await productApi.getAllProducts({ limit: 10, page: 1 });
+      let allProducts = Array.isArray(firstPage.data?.data) ? firstPage.data.data : [];
+      const totalPages = firstPage.data?.meta?.totalPage || 1;
+
+      if (totalPages > 1) {
+        const promises = [];
+        for (let i = 2; i <= totalPages; i++) {
+          promises.push(productApi.getAllProducts({ limit: 10, page: i }));
+        }
+        const results = await Promise.all(promises);
+        results.forEach((res) => {
+          if (Array.isArray(res.data?.data)) {
+            allProducts = [...allProducts, ...res.data.data];
+          }
+        });
+      }
+      setProducts(allProducts);
+    } catch (err) { 
+      console.error(err); 
+      toast.error("Failed to load data");
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await shiftApi.getCurrentStatus();
-        const { shift, drawers } = res.data.data;
-        setStatus({ shift, drawer: drawers?.[0] || null });
-        const prodRes = await productApi.getAllProducts({ isActive: true });
-        setProducts(prodRes.data?.data || []);
-      } catch (err) { console.error(err); }
-    };
     fetchData();
   }, []);
 
@@ -41,7 +61,6 @@ const CreateOrder = () => {
     if (cart.length === 0) return toast.error("Cart is empty!");
     if (!status.shift) return toast.error("No active shift!");
     
-    // ভ্যালিডেশন: পেমেন্ট অ্যামাউন্ট অবশ্যই টোটাল অ্যামাউন্টের সমান বা বেশি হতে হবে
     if (parseFloat(receivedAmount || 0) < totalAmount) {
       return toast.error("Insufficient cash!");
     }
@@ -57,8 +76,7 @@ const CreateOrder = () => {
       const res = await saleApi.createSale(saleData);
       if (res.data.success) {
         setShowModal(true);
-        const prodRes = await productApi.getAllProducts({ isActive: true });
-        setProducts(prodRes.data?.data || []);
+        fetchData();
       }
     } catch (err) {
       console.error(err);
@@ -121,7 +139,8 @@ const CreateOrder = () => {
         <div className="flex-1 flex flex-col gap-3 overflow-hidden">
           <input type="text" placeholder="Search products..." className="w-full p-4 rounded-2xl bg-white border border-slate-200 text-sm lg:text-base" onChange={(e) => setSearchTerm(e.target.value)} />
           
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {/* এখানে flex-wrap যোগ করা হয়েছে */}
+          <div className="flex items-center gap-2 flex-wrap pb-1">
             {categories.map((cat, index) => (
               <button key={index} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-[10px] lg:text-xs font-black uppercase whitespace-nowrap ${selectedCategory === cat ? "bg-indigo-600 text-white" : "bg-white border text-slate-600"}`}>
                 {cat}

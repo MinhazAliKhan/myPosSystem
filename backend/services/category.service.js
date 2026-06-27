@@ -40,7 +40,7 @@ const createCategory = async (data, userId) => {
 
 // GET ALL (নিশ্চিত করুন Pagination ঠিক আছে)
 const getAllCategories = async (query) => {
-  const { search, page = 1, limit = 10 } = query;
+  const { search, page = 1, limit = 20 } = query;
   const pageNum = Math.max(1, parseInt(page) || 1);
   const limitNum = Math.max(1, parseInt(limit) || 10);
   const skip = (pageNum - 1) * limitNum;
